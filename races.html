@@ -1,0 +1,36 @@
+---
+layout: page
+title: Races
+permalink: /races/
+---
+
+Some test of code highlighting :
+
+{% highlight python %}
+def hello():
+    print("hello, world !")
+{% endhighlight %}
+
+Some test of generated menu from JSON file :
+
+<select id="race">
+  {% for id in site.data.races %}
+  <option value="{{ id[0] }}">{{ id[1]["race"]}} ({{ id[1]["date"] }})</option>
+  {% endfor %}
+</select>
+<button type="button" onclick="getChoice()">Go !</button>
+
+<div id="race-details">
+</div>
+
+<script type="text/javascript">
+function getChoice()
+{
+  var e = document.getElementById("race");
+  var selectedValue = e.options[e.selectedIndex].value;
+  
+  text = "You have selected " + selectedValue
+  document.getElementById("race-details").innerText = text;
+  //alert("You have selected " + strOptions + "." );
+}
+</script>

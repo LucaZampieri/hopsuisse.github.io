@@ -4,15 +4,7 @@ title: Races
 permalink: /races/
 ---
 
-Some test of code highlighting :
-
-{% highlight python %}
-def hello():
-    print("hello, world !")
-{% endhighlight %}
-
-Some test of generated menu from JSON file :
-
+<!-- >
 <select id="race">
   {% for id in site.data.races %}
   <option value="{{ id[0] }}">{{ id[1]["race"]}} ({{ id[1]["date"] }})</option>
@@ -22,6 +14,38 @@ Some test of generated menu from JSON file :
 
 <div id="race-details">
 </div>
+< -->
+
+<div id="searchfield">
+  <h3>Search for a race :</h3>
+  <form><input type="text" name="race" class="biginput" id="autocomplete"></form>
+</div><!-- @end #searchfield -->
+
+<div id="outputbox">
+  <p id="outputcontent">Choose a race and the results will display here.</p>
+</div>
+
+<script type="text/javascript">
+$(function(){
+  var races = [
+    {% for id in site.data.races %}
+    {value: "{{ id[1]["race"]}} ({{ id[1]["date"] }})", data: {{ id[1] | jsonify }}},
+    {% endfor %}
+  ];
+  
+  // setup autocomplete function pulling from currencies[] array
+  $('#autocomplete').autocomplete({
+    lookup: races,
+    onSelect: function (suggestion) {
+      var thehtml = 
+        '<strong>Race:</strong> ' + suggestion.data.race + '<br/>' +
+        '<strong>Date:</strong> ' + suggestion.data.date + '<br/>' +
+        '<strong>Participants:</strong> ' + suggestion.data.count;
+      $('#outputcontent').html(thehtml);
+    }
+  });
+});
+</script>
 
 <script type="text/javascript">
 function getChoice()

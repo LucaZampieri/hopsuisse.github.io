@@ -1,3 +1,11 @@
+/* GLOBAL */
+.site-header {
+  border-top: 5px solid #da291c;
+}
+a {
+  color: #da291c;
+}
+
 /* HOME STYLE */
 .home {
   text-align: center;
@@ -10,7 +18,9 @@
 .home h1 {
   color: gray;
 }
-
+.home a {
+  color: #da291c;
+}
 
 /* AUTOCOMPLETE STYLE */
 .autocomplete-suggestions {

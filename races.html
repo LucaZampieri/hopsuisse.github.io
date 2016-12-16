@@ -4,18 +4,6 @@ title: Races
 permalink: /races/
 ---
 
-<!-- >
-<select id="race">
-  {% for id in site.data.races %}
-  <option value="{{ id[0] }}">{{ id[1]["race"]}} ({{ id[1]["date"] }})</option>
-  {% endfor %}
-</select>
-<button type="button" onclick="getChoice()">Go !</button>
-
-<div id="race-details">
-</div>
-< -->
-
 <div id="searchfield">
   <h3>Search for a race :</h3>
   <form><input type="text" name="race" class="biginput" id="autocomplete"></form>
@@ -25,6 +13,8 @@ permalink: /races/
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
 
+<div id="chart"></div>
+
 <script type="text/javascript">
 $(function(){
   var races = [
@@ -32,29 +22,35 @@ $(function(){
     {value: "{{ id[1]["race"]}} ({{ id[1]["date"] }})", data: {{ id[1] | jsonify }}},
     {% endfor %}
   ];
-  
-  // setup autocomplete function pulling from currencies[] array
   $('#autocomplete').autocomplete({
     lookup: races,
     onSelect: function (suggestion) {
+      // Create a simple bar plot
+      var chart = c3.generate({
+          bindto: '#chart',
+          data: {
+            columns: [
+              ['count', suggestion.data.M, suggestion.data.F]
+            ],
+            type: 'bar'
+          },
+          axis: {
+            x: {
+              type: 'category',
+              categories: ['male', 'female']
+            }
+          }
+      });
+      // Display basic info
       var thehtml = 
         '<strong>Race:</strong> ' + suggestion.data.race + '<br/>' +
         '<strong>Date:</strong> ' + suggestion.data.date + '<br/>' +
-        '<strong>Participants:</strong> ' + suggestion.data.count;
+        '<strong>Participants:</strong> ' + suggestion.data.count + '<br/>' +
+        '<strong>Men:</strong> ' + suggestion.data.M + '<br/>' +
+        '<strong>Women:</strong> ' + suggestion.data.F + '<br/>';
       $('#outputcontent').html(thehtml);
     }
   });
 });
 </script>
 
-<script type="text/javascript">
-function getChoice()
-{
-  var e = document.getElementById("race");
-  var selectedValue = e.options[e.selectedIndex].value;
-  
-  text = "You have selected " + selectedValue
-  document.getElementById("race-details").innerText = text;
-  //alert("You have selected " + strOptions + "." );
-}
-</script>

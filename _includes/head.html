@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
   <link rel="stylesheet" href="{{ "/css/main.css" | relative_url }}">
   <link rel="stylesheet" href="{{ "/css/c3.min.css" | relative_url }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"/>
+
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | absolute_url }}">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title | escape }}" href="{{ "/feed.xml" | relative_url }}">
 
@@ -16,6 +18,7 @@
   <script type="text/javascript" src=" {{ "/js/jquery.autocomplete.min.js" | relative_url }}"></script>
   <script type="text/javascript" src=" {{ "/js/d3.min.js" | relative_url }}"></script>
   <script type="text/javascript" src=" {{ "/js/c3.min.js" | relative_url }}"></script>
+  <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
   {% if jekyll.environment == 'production' and site.google_analytics %}
   {% include google-analytics.html %}
   {% endif %}

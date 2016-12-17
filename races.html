@@ -6,16 +6,24 @@ permalink: /races/
 
 <div id="searchfield">
   <h3>Search for a race :</h3>
-  <form><input type="text" name="race" class="biginput" id="autocomplete"></form>
-</div><!-- @end #searchfield -->
+  <form>
+    <input type="text" name="race" class="biginput" id="autocomplete"
+    value="Type a location or a name here..." 
+    onblur="if (this.value==''){this.value='Type a location or a name here...';}"
+    onfocus="if (this.value!=''){this.value='';}">
+  </form>
+</div>
 
 <div id="outputbox">
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
 
-<div id="map" style="height: 180px;"></div>
+<div id="map"></div>
 <div id="chart"></div>
 
+<script type="text/javascript">
+  var mymap = null;
+</script>
 <script type="text/javascript">
 $(function(){
   var races = [
@@ -27,7 +35,19 @@ $(function(){
     lookup: races,
     onSelect: function (suggestion) {
       // Display map
-      var mymap = L.map('map').setView([51.505, -0.09], 13);
+      if (mymap == null) {
+        $("#map").height(250);
+        mymap = L.map('map').setView([46.5532928,6.5824552], 10);
+      } else {
+        mymap.setView([46.5532928,6.5824552], 4);
+      }
+      var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+	      subdomains: 'abcd',
+	      minZoom: 0,
+	      maxZoom: 18,
+	      ext: 'png'
+      }).addTo(mymap);
       // Create a simple bar plot
       var chart = c3.generate({
           bindto: '#chart',

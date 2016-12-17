@@ -43,14 +43,13 @@ a {
   color: #da291c;
 }
 #searchfield {
-  width: 100%;
   margin: 0;
   margin-bottom: 40px;
   text-align: center;
 }
 #searchfield form {
+  width: 100%;
   display: inline-block;
-  background: #eeefed;
   padding: 0;
   margin: 0;
   padding: 5px;
@@ -58,7 +57,7 @@ a {
   margin: 5px 0 0 0;
 }
 #searchfield form .biginput {
-  width: 600px;
+  width: 90%;
   height: 40px;
   padding: 0 10px 0 10px;
   background-color: #fff;

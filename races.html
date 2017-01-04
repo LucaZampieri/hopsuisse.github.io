@@ -14,74 +14,217 @@ permalink: /races/
   </form>
 </div>
 
+<div id="map"></div>
 <div id="outputbox">
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
 
-<div id="map"></div>
-<div id="chart"></div>
 
 <script type="text/javascript">
-  var mymap = null;
-</script>
-<script type="text/javascript">
-$(function(){
+  var myMap = null;
   var races = [
-    {% for id in site.data.races %}
-    {value: "{{ id[1]["race"]}} ({{ id[1]["date"] }})", data: {{ id[1] | jsonify }}},
+    {% for race in site.data.racesnames %}
+    {value:"{{race[1]}}",data:"{{race[0]}}"},
     {% endfor %}
   ];
+  var currentRace = null;
+</script>
+<script type="text/javascript">
+function drawMap() {
+  if (currentRace) {
+    // Get latitude and longitude
+    var latitude = currentRace.latitude
+    var longitude = currentRace.longitude
+    // Display map
+    if (myMap == null) {
+      $("#map").height(250);
+      if (latitude!=null && longitude!=null) {
+        myMap = L.map('map').setView([latitude,longitude], 10);
+      }
+    } else {
+      if (latitude!=null && longitude!=null) {
+        myMap.setView([latitude,longitude], 10);
+      } else {
+        // hide the map
+        $("#map").height(0);
+        myMap = null;
+      }
+    }
+    var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      subdomains: 'abcd',
+      minZoom: 0,
+      maxZoom: 18,
+      ext: 'png'
+    }).addTo(myMap);
+  }
+}
+
+function dateChanged() {
+  // Get selected datekey
+  var selectedDate = $('#date').val();
+  // Update distances select
+  if (currentRace) {
+    fillDistanceSelect(currentRace.dates[selectedDate].distances)
+  }
+  // Update displayed info
+  drawTimeHistogram()
+  drawGenderChart()
+}
+function distanceChanged() {
+  console.log("distance changed")
+  // Get selected distance
+  var selectedDistance = $('#distance').val();
+  // Update displayed info
+  drawTimeHistogram()
+  drawGenderChart()
+}
+
+function fillDateSelect(dates) {
+  var sortedDates = []
+  for (d in dates) {
+    sortedDates.push(
+        {
+          'datekey': d,
+          'day': dates[d].day,
+          'month': dates[d].month,
+          'year': dates[d].year
+        })
+  }
+  sortedDates = sortedDates.sort((a, b) => b.year - a.year)
+
+  $('#date').empty()
+  sortedDates.forEach(function(d) {
+    option = "<option value='"+ d.datekey +"'>"+
+      d.day + '/' + d.month + '/'+ d.year +"</option>"
+    $('#date').append(option)
+  })
+  // TODO: add all years option
+
+  return sortedDates
+}
+
+function fillDistanceSelect(distances) {
+  var sortedDistances = []
+  for (d in distances) {
+    sortedDistances.push(Number(d))
+  }
+  sortedDistances = sortedDistances.sort((a, b) => b - a)
+
+  $('#distance').empty()
+  sortedDistances.forEach(function(d) {
+    option = "<option value ="+ d +">" + d + "km" + "</option>"
+    $('#distance').append(option)
+  })
+
+  return sortedDistances
+}
+
+function drawTimeHistogram() {
+  // Get selected date and distance
+  var mDate = $('#date').val();
+  var mDistance = $('#distance').val()
+
+  // Get times for this choice
+  var times = currentRace.dates[mDate].distances[mDistance].times
+
+  // Create bins and counts
+  var numBins = 10
+  var bins = linspace(times, numBins, true)
+  var counts = valueCounts(times, bins, true)
+
+  // Make bin ticks
+  binTicks = makeBinTicks(bins)
+
+  // Draw chart
+  var countData1 = ['count']
+  var countData2 = ['smoothed']
+  counts.forEach(function(c) {countData1.push(c);countData2.push(c)})
+  var chart = c3.generate({
+    bindto: '#histchart',
+    data: {
+      columns: [
+        countData1,
+        countData2
+      ],
+      type: 'bar',
+      types: {'smoothed': 'spline'}
+    },
+    axis: {
+      x: {
+        label: {text:'Time (seconds)',position:'outer-center'},
+        type: 'category',
+        categories: binTicks
+      },
+      y: {
+        label: 'Number of runners'
+      }
+    }
+  })
+}
+
+function drawGenderChart() {
+  // Get selected date and distance
+  var mDate = $('#date').val();
+  var mDistance = $('#distance').val()
+
+  // Get gender counts for this choice
+  var countMen = currentRace.dates[mDate].distances[mDistance].count_men
+  var countWomen = currentRace.dates[mDate].distances[mDistance].count_women
+
+  // Draw chart
+  var chart = c3.generate({
+    bindto: '#genderchart',
+    data: {
+      columns: [
+        ['men', countMen],
+        ['women', countWomen]
+      ],
+      type: 'donut'
+    },
+    donut: {
+      title: "Gender proportions"
+    }
+  })
+}
+
+$(function(){
   $('#autocomplete').autocomplete({
     lookup: races,
     onSelect: function (suggestion) {
-      // Display map
-      var latitude = suggestion.data.latitude;
-      var longitude = suggestion.data.longitude;
-      if (mymap == null) {
-        $("#map").height(250);
-        if (latitude!=null && longitude!=null) {
-            mymap = L.map('map').setView([latitude,longitude], 10);
-        }
-      } else {
-        if (latitude!=null && longitude!=null) {
-            mymap.setView([latitude,longitude], 10);
-        } else {
-          // hide the map
-          $("#map").height(0);
-          mymap = null;
-        }
-      }
-      var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-	      subdomains: 'abcd',
-	      minZoom: 0,
-	      maxZoom: 18,
-	      ext: 'png'
-      }).addTo(mymap);
-      // Create a simple bar plot
-      var chart = c3.generate({
-          bindto: '#chart',
-          data: {
-            columns: [
-              ['count', suggestion.data.M, suggestion.data.F]
-            ],
-            type: 'bar'
-          },
-          axis: {
-            x: {
-              type: 'category',
-              categories: ['male', 'female']
-            }
-          }
-      });
-      // Display basic info
-      var thehtml = 
-        '<strong>Race:</strong> ' + suggestion.data.race + '<br/>' +
-        '<strong>Date:</strong> ' + suggestion.data.date + '<br/>' +
-        '<strong>Participants:</strong> ' + suggestion.data.count + '<br/>' +
-        '<strong>Men:</strong> ' + suggestion.data.M + '<br/>' +
-        '<strong>Women:</strong> ' + suggestion.data.F + '<br/>';
-      $('#outputcontent').html(thehtml);
+      // Load JSON data
+      $.getJSON("/racedata/" + suggestion.data + ".json", function(data) {
+        console.log(data)
+        
+        // Set 'global' var to selected race
+        currentRace = data
+ 
+        // Empty HTML
+        $('#outputbox').empty()
+
+        // Create select menu for dates
+        var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
+        $('#outputbox').append(dateSelect)
+        var sortedDates = fillDateSelect(data.dates)
+        
+        // Create select menu for distances
+        var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
+        $('#outputbox').append(distanceSelect)
+        var sortedDistances = fillDistanceSelect(data.dates[sortedDates[0].datekey].distances)
+        
+        // Draw map
+        drawMap()
+        
+        // Draw histogram for times
+        var chartdiv = "<div id='histchart'></div>"
+        $('#outputbox').append(chartdiv)
+        drawTimeHistogram()
+        
+        // Draw gender donut chart
+        var genderChart = "<div id='genderchart'></div>"
+        $('#outputbox').append(genderChart)
+        drawGenderChart()
+      })
     }
   });
 });

@@ -73,3 +73,9 @@ a {
 #searchfield form .biginput:focus {
   color: #858585;
 }
+
+/* OUTPUT STYLE */
+#outputbox div {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}

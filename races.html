@@ -30,26 +30,31 @@ permalink: /races/
   var currentRace = null;
 </script>
 <script type="text/javascript">
+/* Draw a map centered on the race location if coordinates are known */
 function drawMap() {
   if (currentRace) {
     // Get latitude and longitude
     var latitude = currentRace.latitude
     var longitude = currentRace.longitude
+
     // Display map
     if (myMap == null) {
+      // First search : create the map
       $("#map").height(250);
       if (latitude!=null && longitude!=null) {
         myMap = L.map('map').setView([latitude,longitude], 10);
       }
     } else {
+      // Update the map
       if (latitude!=null && longitude!=null) {
         myMap.setView([latitude,longitude], 10);
       } else {
-        // hide the map
         $("#map").height(0);
         myMap = null;
       }
     }
+    
+    // Add actual layer
     var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
       attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       subdomains: 'abcd',
@@ -60,27 +65,60 @@ function drawMap() {
   }
 }
 
+/* Get all possible distances for all years of the current race */
+function getDistancesAllYears() {
+  var distances = []
+  
+  // For each date, fetch the available distances and 
+  // add them to the array
+  for (let key of Object.keys(currentRace.dates)) {
+    var mDist = Object.keys(currentRace.dates[key].distances)
+    distances = distances.concat(mDist)
+  }
+
+  // Remove duplicates
+  distances = [...new Set(distances)]
+  
+  return distances
+}
+
+/* Callback function for date selection */
 function dateChanged() {
   // Get selected datekey
   var selectedDate = $('#date').val();
+  
   // Update distances select
   if (currentRace) {
-    fillDistanceSelect(currentRace.dates[selectedDate].distances)
+    if (selectedDate == 'all') {
+      fillDistanceSelect(getDistancesAllYears())
+    } else {
+      fillDistanceSelect(Object.keys(currentRace.dates[selectedDate].distances))
+    }
   }
-  // Update displayed info
-  drawTimeHistogram()
-  drawGenderChart()
-}
-function distanceChanged() {
-  console.log("distance changed")
-  // Get selected distance
-  var selectedDistance = $('#distance').val();
+  
   // Update displayed info
   drawTimeHistogram()
   drawGenderChart()
 }
 
+/* Callback function for distance selection */
+function distanceChanged() {
+  // Update displayed info
+  drawTimeHistogram()
+  drawGenderChart()
+}
+
+/* Populate the date select menu with the available dates for current race
+ *
+ * Params :
+ *  - dates : dictionary with string dates as keys and attributes 'day',
+ *      'month', 'year'
+ * Returns :
+ *  - sortedDates : array of dictionaries (see below in for loop)
+ */
 function fillDateSelect(dates) {
+  console.log('fillDateSelect')
+  console.log(dates)
   var sortedDates = []
   for (d in dates) {
     sortedDates.push(
@@ -94,21 +132,30 @@ function fillDateSelect(dates) {
   sortedDates = sortedDates.sort((a, b) => b.year - a.year)
 
   $('#date').empty()
+  allYears = "<option value='all'>All years</option>"
+  $('#date').append(allYears)
+
   sortedDates.forEach(function(d) {
     option = "<option value='"+ d.datekey +"'>"+
       d.day + '/' + d.month + '/'+ d.year +"</option>"
     $('#date').append(option)
   })
-  // TODO: add all years option
-
+  
   return sortedDates
 }
 
+/* Populate the distance select menu with the available distances for current race
+ *
+ * Params :
+ *  - distances : array of string distances
+ * Returns :
+ *  - sortedDistance : array of int distances
+ */
 function fillDistanceSelect(distances) {
   var sortedDistances = []
-  for (d in distances) {
+  distances.forEach(function(d) {
     sortedDistances.push(Number(d))
-  }
+  })
   sortedDistances = sortedDistances.sort((a, b) => b - a)
 
   $('#distance').empty()
@@ -120,57 +167,119 @@ function fillDistanceSelect(distances) {
   return sortedDistances
 }
 
+/* Get times for current race given date and distance
+ *
+ * Params :
+ *  - raceDate : string date or 'all'
+ *  - raceDistance : string distance
+ * Returns :
+ *  - times : dictionary with string dates as keys and int arrays as values
+ */
+function getTimes(raceDate, raceDistance) {
+  var times = {}
+  if (raceDate == 'all') {
+    for (let key of Object.keys(currentRace.dates)) {
+      var mDistData = currentRace.dates[key].distances[raceDistance]
+      if (mDistData) {
+        var mTimes = mDistData.times
+        times[key] = mTimes
+      }
+    }
+  } else {
+    times[raceDate] = currentRace.dates[raceDate].distances[raceDistance].times
+  }
+  return times
+}
+
+/* Draw histogram for times for the current race, date & distance selection */
 function drawTimeHistogram() {
   // Get selected date and distance
   var mDate = $('#date').val();
   var mDistance = $('#distance').val()
 
   // Get times for this choice
-  var times = currentRace.dates[mDate].distances[mDistance].times
+  var times = getTimes(mDate, mDistance)
 
   // Create bins and counts
   var numBins = 10
-  var bins = linspace(times, numBins, true)
-  var counts = valueCounts(times, bins, true)
+  allTimes = []
+  for (let key of Object.keys(times)) {
+    allTimes = allTimes.concat(times[key])
+  }
+  var bins = linspace(allTimes, numBins, true)
+  var counts = []
+  for (let key of Object.keys(times)) {
+    var mCounts = valueCounts(times[key], bins, true)
+    mCounts.unshift(key)
+    counts.push(mCounts)
+  }
 
   // Make bin ticks
   binTicks = makeBinTicks(bins)
 
   // Draw chart
-  var countData1 = ['count']
-  var countData2 = ['smoothed']
-  counts.forEach(function(c) {countData1.push(c);countData2.push(c)})
   var chart = c3.generate({
     bindto: '#histchart',
     data: {
-      columns: [
-        countData1,
-        countData2
-      ],
+      columns: counts,
       type: 'bar',
-      types: {'smoothed': 'spline'}
     },
     axis: {
       x: {
         label: {text:'Time (seconds)',position:'outer-center'},
         type: 'category',
-        categories: binTicks
+        categories: binTicks,
+        tick: {
+          format: function(i) { return binTicks[i].split(' - ')[0] }
+        }
       },
       y: {
         label: 'Number of runners'
       }
+    },
+    tooltip: {
+      grouped: false,
+      format: {
+        title: function(i) { return binTicks[i] + ' seconds' },
+      }
+    },
+    transition: {
+      duration: 0
+    },
+    onrendered: function() {
+      // HOTFIX for ticks position...
+      $('#histchart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
     }
   })
 }
 
+function getGenderCounts(raceDate, raceDistance) {
+  var countMen = 0, countWomen = 0
+  if (raceDate == 'all') {
+    for (let key of Object.keys(currentRace.dates)) {
+      var mDistData = currentRace.dates[key].distances[raceDistance]
+      if (mDistData) {
+        countMen += mDistData.count_men
+        countWomen += mDistData.count_women
+      }
+    }
+  } else {
+    countMen = currentRace.dates[raceDate].distances[raceDistance].count_men
+    countWomen = currentRace.dates[raceDate].distances[raceDistance].count_women
+  }
+  return {'men': countMen, 'women': countWomen}
+}
+
+/* Draw gender donut chart for current race, date & distance selection */
 function drawGenderChart() {
   // Get selected date and distance
   var mDate = $('#date').val();
   var mDistance = $('#distance').val()
 
   // Get gender counts for this choice
-  var countMen = currentRace.dates[mDate].distances[mDistance].count_men
-  var countWomen = currentRace.dates[mDate].distances[mDistance].count_women
+  var counts = getGenderCounts(mDate, mDistance)
+  var countMen = counts.men
+  var countWomen = counts.women
 
   // Draw chart
   var chart = c3.generate({
@@ -188,6 +297,7 @@ function drawGenderChart() {
   })
 }
 
+/* Callback function for race selection through search bar */
 $(function(){
   $('#autocomplete').autocomplete({
     lookup: races,
@@ -210,7 +320,7 @@ $(function(){
         // Create select menu for distances
         var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
         $('#outputbox').append(distanceSelect)
-        var sortedDistances = fillDistanceSelect(data.dates[sortedDates[0].datekey].distances)
+        var sortedDistances = fillDistanceSelect(Object.keys(data.dates[sortedDates[0].datekey].distances))
         
         // Draw map
         drawMap()

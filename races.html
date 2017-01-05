@@ -117,8 +117,6 @@ function distanceChanged() {
  *  - sortedDates : array of dictionaries (see below in for loop)
  */
 function fillDateSelect(dates) {
-  console.log('fillDateSelect')
-  console.log(dates)
   var sortedDates = []
   for (d in dates) {
     sortedDates.push(
@@ -238,7 +236,7 @@ function drawTimeHistogram() {
       }
     },
     tooltip: {
-      grouped: false,
+      grouped: true,
       format: {
         title: function(i) { return binTicks[i] + ' seconds' },
       }
@@ -320,7 +318,7 @@ $(function(){
         // Create select menu for distances
         var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
         $('#outputbox').append(distanceSelect)
-        var sortedDistances = fillDistanceSelect(Object.keys(data.dates[sortedDates[0].datekey].distances))
+        var sortedDistances = fillDistanceSelect(getDistancesAllYears())
         
         // Draw map
         drawMap()

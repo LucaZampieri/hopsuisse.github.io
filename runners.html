@@ -1,0 +1,112 @@
+---
+layout: page
+title: Runners
+permalink: /runners/
+---
+
+<div id="searchfield">
+  <h3>Search for a runner :</h3>
+  <form>
+    <input type="text" name="runner" class="biginput" id="autocomplete" autocomplete="on"
+    value="Type the name of a runner here..."
+    onblur="if (this.value==''){this.value='Type the name of a runner here...';}" 
+    onfocus="if (this.value!=''){this.value='';}">
+  </form>
+</div>
+
+<div id="map"></div>
+<div id="outputbox">
+  <p id="outputcontent">Choose a runner and the results will be displayed here.</p>
+</div>
+
+
+<script type="text/javascript">
+  var myMap = null;
+  var runners = [
+    {% for runner in site.data.runnersnames %}
+    {value:"{{runner[1]}}",data:"{{runner[0]}}"},
+    {% endfor %}
+  ];
+  var currentRunner = null;
+</script>
+
+<script type="text/javascript">
+/* Callback function for race selection */
+function raceChanged() {
+  // Get selected racekey
+  var selectedRace = $('#race').val();
+  
+  // Update dates select
+  if (currentRunner) {
+    /*if (selectedRace == 'all') {
+      fillDateSelect(getDistancesAllYears())
+    } else {*/
+      fillDateSelect(Object.keys(currentRunner.races[selectedRace].date))
+    //}
+  }
+} 
+
+/* Populate the date select menu with the available dates for current race, current runner
+ *
+ * Params :
+ *  - dates : dictionary with string dates as keys and attributes 'day',
+ *      'month', 'year'
+ * Returns :
+ *  - sortedDates : array of dictionaries (see below in for loop)
+ */ 
+function fillDateSelect(dates) {
+  var sortedDates = []
+  for (d in dates) {
+    sortedDates.push(
+        {
+          'datekey': d,
+          'day': dates[d].day,
+          'month': dates[d].month,
+          'year': dates[d].year
+        })
+  }
+  sortedDates = sortedDates.sort((a, b) => b.year - a.year)
+  $('#date').empty()
+  allYears = "<option value='all'>All years</option>"
+  $('#date').append(allYears)
+  sortedDates.forEach(function(d) {
+    option = "<option value='"+ d.datekey +"'>"+
+      d.day + '/' + d.month + '/'+ d.year +"</option>"
+    $('#date').append(option)
+  })
+  
+  return sortedDates
+}
+
+/* Callback function for race selection through search bar */
+$(function(){
+  $('#autocomplete').autocomplete({
+    lookup: runners,
+    onSelect: function (suggestion) {
+      // Load JSON data
+      $.getJSON("/runnerdata/" + suggestion.data + ".json", function(data) {
+        console.log(data)
+        
+        // Set 'global' var to selected race
+        currentRunner = data
+ 
+        // Empty HTML
+        $('#outputbox').empty()
+        
+        // Create select menu for dates
+        var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
+        $('#outputbox').append(raceSelect)
+        //var sortedRaces = fillRaceSelect(data.races)
+        
+        /*
+        // Create select menu for distances
+        var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
+        $('#outputbox').append(distanceSelect)
+        var sortedDistances = fillDistanceSelect(getDistancesAllYears())
+        */
+        
+      })
+    }
+  });
+});
+</script>

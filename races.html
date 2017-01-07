@@ -14,7 +14,7 @@ permalink: /races/
   </form>
 </div>
 
-<div id="map"></div>
+<!-- <div id="map"></div> -->
 <div id="outputbox">
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
@@ -37,21 +37,11 @@ function drawMap() {
     var latitude = currentRace.latitude
     var longitude = currentRace.longitude
 
-    // Display map
-    if (myMap == null) {
-      // First search : create the map
-      $("#map").height(250);
-      if (latitude!=null && longitude!=null) {
-        myMap = L.map('map').setView([latitude,longitude], 10);
-      }
+    $('#map').height(250)
+    if (latitude!=null && longitude!=null) {
+      myMap = L.map('map').setView([latitude,longitude], 10);
     } else {
-      // Update the map
-      if (latitude!=null && longitude!=null) {
-        myMap.setView([latitude,longitude], 10);
-      } else {
-        $("#map").height(0);
-        myMap = null;
-      }
+      $('#map').height(0)
     }
     
     // Add actual layer
@@ -208,7 +198,10 @@ function drawTimeHistogram() {
   var counts = []
   for (let key of Object.keys(times)) {
     var mCounts = valueCounts(times[key], bins, true)
-    mCounts.unshift(key)
+    // Build string date
+    dateAttr = currentRace.dates[key]
+    strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year
+    mCounts.unshift(strDate)
     counts.push(mCounts)
   }
 
@@ -295,6 +288,44 @@ function drawGenderChart() {
   })
 }
 
+function drawCountsChart() {
+  var dates = []
+  var counts = []
+  if (Object.keys(currentRace.dates).length > 1) {
+    for (let key of Object.keys(currentRace.dates)) {
+      // Get count for this date
+      day = currentRace.dates[key].day
+      month = currentRace.dates[key].month
+      year = currentRace.dates[key].year
+      countMen = currentRace.dates[key].count_men
+      countWomen = currentRace.dates[key].count_women
+      counts.push(countMen + countWomen)
+      dates.push(day +'/'+ month +'/'+ year)
+    }
+    dates.unshift('x')
+    counts.unshift('count')
+    var chart = c3.generate({
+      bindto: '#countschart',
+      data: {
+        x: 'x',
+        xFormat: '%d/%m/%Y',
+        columns : [dates, counts],
+        type: 'spline'
+      },
+      axis: {
+        x: {
+          type: 'timeseries',
+          tick: {format: '%Y'}
+        }
+      },
+      grid: {
+        y: {show: true}
+      },
+      legend: { show: false }
+    })
+  }
+}
+
 /* Callback function for race selection through search bar */
 $(function(){
   $('#autocomplete').autocomplete({
@@ -310,6 +341,26 @@ $(function(){
         // Empty HTML
         $('#outputbox').empty()
 
+        // TODO: write description
+        var title = "<h2>"+ currentRace.name +"</h2>"
+        var description = "Blah blah generic description."
+        $('#outputbox').append(title)
+        $('#outputbox').append(description)
+
+        // Draw map
+        var mapDiv = "<div id='map'></div>"
+        $('#outputbox').append(mapDiv)
+        drawMap()
+
+        // Draw counts chart
+        var countsChart = "<div id='countschart'></div>"
+        $('#outputbox').append(countsChart)
+        drawCountsChart()
+
+        // Details section
+        var details = "<h3>Details</h3>"
+        $('#outputbox').append(details)
+
         // Create select menu for dates
         var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
         $('#outputbox').append(dateSelect)
@@ -319,9 +370,6 @@ $(function(){
         var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
         $('#outputbox').append(distanceSelect)
         var sortedDistances = fillDistanceSelect(getDistancesAllYears())
-        
-        // Draw map
-        drawMap()
         
         // Draw histogram for times
         var chartdiv = "<div id='histchart'></div>"

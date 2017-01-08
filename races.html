@@ -14,7 +14,6 @@ permalink: /races/
   </form>
 </div>
 
-<!-- <div id="map"></div> -->
 <div id="outputbox">
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
@@ -309,13 +308,15 @@ function drawCountsChart() {
       data: {
         x: 'x',
         xFormat: '%d/%m/%Y',
-        columns : [dates, counts],
-        type: 'spline'
+        columns : [dates, counts]
       },
       axis: {
         x: {
           type: 'timeseries',
           tick: {format: '%Y'}
+        },
+        y: {
+          tick: {outer: false}
         }
       },
       grid: {

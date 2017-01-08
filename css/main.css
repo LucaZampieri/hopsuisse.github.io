@@ -79,3 +79,19 @@ a {
   margin-top: 20px;
   margin-bottom: 10px;
 }
+
+/* CHARTS */
+.c3-grid .c3-ygrid {
+  stroke: #eee;
+  stroke-width: 2px;
+  stroke-dasharray: none;
+}
+
+path.c3-shape.c3-line.c3-line-count {
+  stroke-width: 3px;
+}
+
+#countschart .c3-axis-y .domain, #countschart .c3-axis-y .tick line {
+  /* stroke-width: 0;*/
+  opacity: 0
+}

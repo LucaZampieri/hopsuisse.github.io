@@ -50,3 +50,15 @@ function valueCounts(data, bins, includeLast) {
 
     return counts
 }
+
+function secondsToTime(secondsString) {
+    var minutes = Math.floor(Number(secondsString) / 60)
+    var seconds = Number(secondsString) % 60
+    var hours = Math.floor(minutes / 60)
+    minutes = minutes % 60
+    if (hours > 0) {
+        return hours + ':' + minutes + ':' + seconds
+    } else {
+        return minutes + ':' + seconds
+    }
+}

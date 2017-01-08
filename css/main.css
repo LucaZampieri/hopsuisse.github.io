@@ -80,9 +80,25 @@ a {
   margin-bottom: 10px;
 }
 
-/* CHARTS */
+#globaldesc .text,
+#weather {
+  display: inline-block;
+  vertical-align: top;
+  width: 50%;
+}
+
+#weather { width: 40%; }
+
+#map,
+#gender {
+  display: inline-block;
+  width: 50%;
+  height: 250px;
+}
+
+/* CHARTS (GLOBAL) */
 .c3-grid .c3-ygrid {
-  stroke: #eee;
+  stroke: #d7d7d7;
   stroke-width: 2px;
   stroke-dasharray: none;
 }
@@ -91,7 +107,34 @@ path.c3-shape.c3-line.c3-line-count {
   stroke-width: 3px;
 }
 
-#countschart .c3-axis-y .domain, #countschart .c3-axis-y .tick line {
-  /* stroke-width: 0;*/
-  opacity: 0
+g.tick {
+  font-size: small;
+}
+
+/* PARTICIPATION TRENDS CHART */
+#participation, #weather {
+  padding-top: 1px;
+  padding-left: 10px;
+  padding-right: 20px;
+  background-color: #f1f1f1;
+}
+
+#participation .chart .c3-axis-x .tick line {
+  stroke: #d7d7d7;
+  stroke-width: 2px;
+}
+#participation .chart .c3-axis-x .domain,
+#participation .chart .c3-axis-y .domain,
+#participation .chart .c3-axis-y .tick line {
+  opacity: 0;
+}
+
+#details {
+  margin-top: 50px;
+}
+
+#gender {
+  padding-top: 1px;
+  padding-left: 10px;
+  text-align: center;
 }

@@ -41,10 +41,57 @@ function raceChanged() {
     /*if (selectedRace == 'all') {
       fillDateSelect(getDistancesAllYears())
     } else {*/
-      fillDateSelect(Object.keys(currentRunner.races[selectedRace].date))
+      fillDateSelect(currentRunner.races[selectedRace].date)
     //}
   }
-} 
+}
+</script>
+
+<script type="text/javascript">
+/* Callback function for date selection */
+function dateChanged() {
+  // Get selected racekey
+  var selectedDate = $('#date').val();
+  var selectedRace = $('#race').val();
+  // Update dates select
+  //if (currentRunner) {
+    /*if (selectedRace == 'all') {
+      fillDateSelect(getDistancesAllYears())
+    } else {*/
+      fillDateSelect(currentRunner.races[selectedRace].date)
+    //}
+  //}
+}
+
+/* Populate the race select menu with the available races for current runner
+ *
+ * Params :
+ *  - races : dictionary with string races as keys
+ * Returns :
+ *  - sortedRaces : array of dictionaries (see below in for loop)
+ */ 
+function fillRaceSelect(races) {
+  var sortedRaces = []
+  for (r in races) {
+    sortedRaces.push(
+        {
+          'racekey': r,
+          //'day': dates[d].day,
+          //'month': dates[d].month,
+          //'year': dates[d].year
+        })
+  }
+  //sortedRaces = sortedRaces.sort((a, b) => b.year - a.year)
+  $('#race').empty()
+  allRaces = "<option value='all'>All races</option>"
+  $('#race').append(allRaces)
+  sortedRaces.forEach(function(r) {
+    option = "<option value='"+ r.racekey +"'>"+r.racekey+"</option>"
+    $('#race').append(option)
+  })
+  
+  return sortedRaces
+}
 
 /* Populate the date select menu with the available dates for current race, current runner
  *
@@ -56,7 +103,7 @@ function raceChanged() {
  */ 
 function fillDateSelect(dates) {
   var sortedDates = []
-  for (d in dates) {
+  for (var d in dates) {
     sortedDates.push(
         {
           'datekey': d,
@@ -93,17 +140,15 @@ $(function(){
         // Empty HTML
         $('#outputbox').empty()
         
-        // Create select menu for dates
+        // Create select menu for races
         var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
         $('#outputbox').append(raceSelect)
-        //var sortedRaces = fillRaceSelect(data.races)
+        var sortedRaces = fillRaceSelect(data.races)
         
-        /*
-        // Create select menu for distances
-        var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
-        $('#outputbox').append(distanceSelect)
-        var sortedDistances = fillDistanceSelect(getDistancesAllYears())
-        */
+        // Create select menu for dates
+        var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
+        $('#outputbox').append(dateSelect)
+        //var sortedDates = fillDateSelect(getDatesAllYears())
         
       })
     }

@@ -21,46 +21,107 @@ permalink: /runners/
 
 
 <script type="text/javascript">
-  var myMap = null;
-  var runners = [
-    {% for runner in site.data.runnersnames %}
-    {value:"{{runner[1]}}",data:"{{runner[0]}}"},
-    {% endfor %}
-  ];
-  var currentRunner = null;
+	var myMap = null;
+	var runners = [
+		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
+		{value:"Veillard Steeve 1982",data:"veillardsteeve1982"},
+		{value:"Chanon Theo 2005",data:"chanontheo2005"}
+	];
+	var currentRunner = null;
 </script>
 
 <script type="text/javascript">
+	// TODO: 	- problem with races containing appostrophals
+	//			- complete list of runners -> transfer folder manually, 
+	//			  do NOT change the _config.yml
+
+/* Draw a map of Switzerland with pointers where a runner has done a 
+race, if coordinates are known. Only in the situation in which "All 
+races" is selected. */
+function drawFullMap() {
+	if (myMap) {
+		myMap.remove();
+		myMap = null;
+	}
+	if (currentRunner) {
+		$('#map').empty()
+		$('#map').height(340).width(600)
+		myMap = L.map('map').setView([46.8182,8.2275], 7);
+		// Add actual layer
+		var Stamen_Terrain_full = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+			subdomains: 'abcd',
+			minZoom: 0,
+			maxZoom: 18,
+			ext: 'png'
+		}).addTo(myMap);
+	}
+}
+
+/* Draw a map centered on the race location if coordinates are known */
+function drawMap() {
+	if (myMap)
+		myMap.remove();
+	if (currentRunner) {
+		var selectedRace = $("#race").val();
+		if (selectedRace != 'all') {
+			var specificRace = currentRunner.races[selectedRace];
+			// Get latitude and longitude
+			var latitude = specificRace.latitude
+			var longitude = specificRace.longitude
+			if (latitude!=null && longitude!=null) {
+				$('#map').empty()
+				$('#map').height(200).width(600)
+				myMap = L.map('map').setView([latitude,longitude], 10);
+				// Add actual layer
+				var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+					attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+					subdomains: 'abcd',
+					minZoom: 0,
+					maxZoom: 18,
+					ext: 'png'
+				}).addTo(myMap);
+			} else {
+				$('#map').empty()
+				$('#map').width(0).height(0)
+				$('#globaldesc .text').width('100%')
+			} 
+		} else {
+			$('#map').height(0).width(0);
+			myMap = null;
+		}
+	}
+}
+
 /* Callback function for race selection */
 function raceChanged() {
-  // Get selected racekey
-  var selectedRace = $('#race').val();
+	console.log(currentRunner)
+	// Get selected racekey
+	var selectedRace = $("#race").val();
   
-  // Update dates select
-  if (currentRunner) {
-    /*if (selectedRace == 'all') {
-      fillDateSelect(getDistancesAllYears())
-    } else {*/
-      fillDateSelect(currentRunner.races[selectedRace].date)
-    //}
-  }
+	// Update dates select
+	if (currentRunner) {
+		if (selectedRace == 'all') {
+			if ($("date")){
+				$('#date').remove(); 
+			}
+			drawFullMap()
+				
+		} else {
+			drawMap()
+			// Create select menu for dates
+			var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
+			$('#outputbox').append(dateSelect)
+			fillDateSelect(currentRunner.races[selectedRace].date)
+		}
+	}
 }
 </script>
 
 <script type="text/javascript">
 /* Callback function for date selection */
 function dateChanged() {
-  // Get selected racekey
-  var selectedDate = $('#date').val();
-  var selectedRace = $('#race').val();
-  // Update dates select
-  //if (currentRunner) {
-    /*if (selectedRace == 'all') {
-      fillDateSelect(getDistancesAllYears())
-    } else {*/
-      fillDateSelect(currentRunner.races[selectedRace].date)
-    //}
-  //}
+	//drawMap()
 }
 
 /* Populate the race select menu with the available races for current runner
@@ -76,9 +137,6 @@ function fillRaceSelect(races) {
     sortedRaces.push(
         {
           'racekey': r,
-          //'day': dates[d].day,
-          //'month': dates[d].month,
-          //'year': dates[d].year
         })
   }
   //sortedRaces = sortedRaces.sort((a, b) => b.year - a.year)
@@ -86,10 +144,10 @@ function fillRaceSelect(races) {
   allRaces = "<option value='all'>All races</option>"
   $('#race').append(allRaces)
   sortedRaces.forEach(function(r) {
-    option = "<option value='"+ r.racekey +"'>"+r.racekey+"</option>"
+    option = '<option value="'+ r.racekey +'">'+r.racekey+'</option>'
     $('#race').append(option)
   })
-  
+  drawFullMap()
   return sortedRaces
 }
 
@@ -102,56 +160,60 @@ function fillRaceSelect(races) {
  *  - sortedDates : array of dictionaries (see below in for loop)
  */ 
 function fillDateSelect(dates) {
-  var sortedDates = []
-  for (var d in dates) {
-    sortedDates.push(
-        {
-          'datekey': d,
-          'day': dates[d].day,
-          'month': dates[d].month,
-          'year': dates[d].year
-        })
-  }
-  sortedDates = sortedDates.sort((a, b) => b.year - a.year)
-  $('#date').empty()
-  allYears = "<option value='all'>All years</option>"
-  $('#date').append(allYears)
-  sortedDates.forEach(function(d) {
-    option = "<option value='"+ d.datekey +"'>"+
-      d.day + '/' + d.month + '/'+ d.year +"</option>"
-    $('#date').append(option)
-  })
-  
-  return sortedDates
+	$('#date').empty()
+	if (dates != 'all') {
+		var sortedDates = []
+		for (var d in dates) {
+			sortedDates.push({
+				'datekey': d,
+				'day': dates[d].day,
+				'month': dates[d].month,
+				'year': dates[d].year
+			})
+		}
+		sortedDates = sortedDates.sort((a, b) => b.year - a.year)
+		allYears = "<option value='all'>All years</option>"
+		$('#date').append(allYears)
+		sortedDates.forEach(function(d) {
+			option = "<option value='"+ d.datekey +"'>"+
+			d.day + '/' + d.month + '/'+ d.year +"</option>"
+		$('#date').append(option)
+		})
+		return sortedDates
+	}
 }
 
 /* Callback function for race selection through search bar */
 $(function(){
-  $('#autocomplete').autocomplete({
-    lookup: runners,
-    onSelect: function (suggestion) {
-      // Load JSON data
-      $.getJSON("/runnerdata/" + suggestion.data + ".json", function(data) {
-        console.log(data)
+	$('#autocomplete').autocomplete({ 
+		delay: 0,
+		lookup: runners,
+
+		onSelect: function (suggestion) {
+			// Load JSON data
+			$.getJSON("../runnerdata/" + suggestion.data + ".json", function(data) {
+				console.log(data)
         
-        // Set 'global' var to selected race
-        currentRunner = data
- 
-        // Empty HTML
-        $('#outputbox').empty()
-        
-        // Create select menu for races
-        var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
-        $('#outputbox').append(raceSelect)
-        var sortedRaces = fillRaceSelect(data.races)
-        
-        // Create select menu for dates
-        var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
-        $('#outputbox').append(dateSelect)
-        //var sortedDates = fillDateSelect(getDatesAllYears())
-        
-      })
-    }
-  });
-});
+				// Set 'global' var to selected race
+				currentRunner = data
+  
+				// Empty HTML
+				$('#outputbox').empty()
+				
+				// Create select menu for races
+				var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
+				$('#outputbox').append(raceSelect)
+				var sortedRaces = fillRaceSelect(data.races)
+				
+				var selectedRace = $("#race").val();
+				//var selectedDate = $("#date").val();
+				$('#globaldesc').empty()
+				$('#outputbox').append("<div id='globaldesc'></div>")
+				$('#globaldesc').append("<div class='text'></div>")
+				$('#globaldesc').append("<div id='map'></div>")
+				
+			})
+		}
+	});
+}); 
 </script>

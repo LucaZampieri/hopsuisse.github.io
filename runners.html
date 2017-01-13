@@ -25,14 +25,14 @@ permalink: /runners/
 	var runners = [
 		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
 		{value:"Veillard Steeve 1982",data:"veillardsteeve1982"},
-		{value:"Chanon Theo 2005",data:"chanontheo2005"}
+		{value:"Chanon Theo 2005",data:"chanontheo2005"},
+		{value:"Schmidt Peter 1952",data:"schmidtpeter1952"}
 	];
 	var currentRunner = null;
 </script>
 
 <script type="text/javascript">
-	// TODO: 	- problem with races containing appostrophals
-	//			- complete list of runners -> transfer folder manually, 
+	// TODO: 	- complete list of runners -> transfer folder manually, 
 	//			  do NOT change the _config.yml
 
 /* Draw a map of Switzerland with pointers where a runner has done a 
@@ -55,7 +55,39 @@ function drawFullMap() {
 			maxZoom: 18,
 			ext: 'png'
 		}).addTo(myMap);
+		for (let key of Object.keys(currentRunner.races)) {
+			var currentRace = currentRunner.races[key]
+			var mLat = currentRace.latitude;
+			var mLong = currentRace.longitude;
+			var nbParticipation = Object.keys(currentRace.date).length;
+			if (mLat!=null && mLong!=null) {
+				marker = L.marker([mLat, mLong]).addTo(myMap);
+				var popupMarker = "<b href='#' onclick='clickPopupFullMap(this)' " 
+					+ "onmouseover='mouseOverPopupFullMap(this)' "
+					+ "onmouseout='mouseOutPopupFullMap(this)'>" + key 
+					+ "</b><br>"+ nbParticipation +" participation";
+				if (nbParticipation > 1) 
+					popupMarker += "s.";
+				else
+					popupMarker += ".";
+				marker.bindPopup(popupMarker)
+			}
+		}
 	}
+}
+
+/* Functions called when an event is launched on a popup of the fullMap */
+function clickPopupFullMap(elem) {
+	key = elem.innerHTML
+	$('#race').val(key);
+	raceChanged();
+}
+function mouseOverPopupFullMap(elem) {
+	elem.style.textDecoration = 'underline';
+	elem.style.cursor = 'pointer';
+}
+function mouseOutPopupFullMap(elem) {
+	elem.style.textDecoration = 'none';
 }
 
 /* Draw a map centered on the race location if coordinates are known */
@@ -71,8 +103,8 @@ function drawMap() {
 			var longitude = specificRace.longitude
 			if (latitude!=null && longitude!=null) {
 				$('#map').empty()
-				$('#map').height(200).width(600)
-				myMap = L.map('map').setView([latitude,longitude], 10);
+				$('#map').height(400).width(500)
+				myMap = L.map('map').setView([latitude,longitude], 14);
 				// Add actual layer
 				var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
 					attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -95,16 +127,17 @@ function drawMap() {
 
 /* Callback function for race selection */
 function raceChanged() {
+	console.log('raceChanged() entered')
 	console.log(currentRunner)
 	// Get selected racekey
 	var selectedRace = $("#race").val();
-  
+
 	// Update dates select
 	if (currentRunner) {
+		if ($("#date")){
+			$('#date').remove(); 
+		}
 		if (selectedRace == 'all') {
-			if ($("date")){
-				$('#date').remove(); 
-			}
 			drawFullMap()
 				
 		} else {

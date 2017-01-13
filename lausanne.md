@@ -4,7 +4,12 @@ title: Lausanne Marathon
 permalink: /lausanne/
 ---
 
-Here we can write some _Markdown_ *text* !
+This page focuses on a statistical analysis done on data from *Lausanne Marathon
+2016*.
+
+## Counts
+
+<div id="countschart"></div>
 
 ## Age distribution
 
@@ -26,14 +31,31 @@ Here we can write some _Markdown_ *text* !
 
 <script type="text/javascript">
 
+function drawCountsChart() {
+  var counts = {{ site.data.lausanne_viz.counts | jsonify }}
+
+  var chartData = []
+  for (let key of Object.keys(counts)) {
+    chartData.push([key, counts[key]])
+  }
+  var chart = c3.generate({
+    bindto: '#countschart',
+    data: {
+      columns: chartData,
+      type : 'pie'
+    }
+  });
+
+}
+
 function drawOverallAgeDistribution() {
   var age_distribution = {{ site.data.lausanne_viz.age_distribution | jsonify }}
-  
+
   var ages = age_distribution.overall.ages
   ages.unshift('ages')
   var counts = age_distribution.overall.counts
   counts.unshift('fraction')
-  
+
   var chart = c3.generate({
     bindto: '#agedistriboverall',
     data: {
@@ -43,12 +65,16 @@ function drawOverallAgeDistribution() {
     },
     axis: {
       x: {
+        min: 0,
+        max: 90,
+        tick: {values: linspace([0,90],9)},
         label: {text:'Age',position:'outer-center'},
       },
       y: {
         label: 'Fraction of runners'
       }
-    }
+    },
+    legend: {show: false}
   })
 }
 
@@ -67,7 +93,7 @@ function drawAgeDistribution(sex, bindName) {
   counts10km.unshift('10km')
   counts21km.unshift('21km')
   counts42km.unshift('42km')
-  
+
   var chart = c3.generate({
     bindto: bindName,
     data: {
@@ -84,6 +110,9 @@ function drawAgeDistribution(sex, bindName) {
     },
     axis: {
       x: {
+        min: 20,
+        max: 90,
+        tick: {values: linspace([20,90],7)},
         label: {text:'Age',position:'outer-center'},
       },
       y: {
@@ -109,15 +138,25 @@ function drawTowns() {
     },
     axis: {
       x: {
+        tick: {
+          values: [0, 1, 2, 3],
+          format: function(d){return '10^'+d}
+        },
         label: {text:'Number of runners / town',position:'outer-center'},
       },
       y: {
+        tick: {
+          values: [0, 1, 2, 3],
+          format: function(d){return '10^'+d}
+        },
         label: 'Number of towns'
       }
-    }
+    },
+    legend: {show: false}
   })
 }
 
+drawCountsChart()
 drawOverallAgeDistribution()
 drawAgeDistribution('women', '#agedistribwomen')
 drawAgeDistribution('men', '#agedistribmen')

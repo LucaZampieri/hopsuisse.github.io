@@ -214,7 +214,10 @@ function drawTimeHistogram() {
     bindto: '#times .chart',
     data: {
       columns: counts,
-      type: 'bar',
+      type: 'spline',
+    },
+    point: {
+      show: false
     },
     axis: {
       x: {
@@ -232,6 +235,7 @@ function drawTimeHistogram() {
       }
     },
     tooltip: {
+      show: false,
       grouped: true,
       format: {
         title: function(i) {
@@ -348,15 +352,24 @@ function displayWeather() {
   var info = currentRace.dates[mDate]
   if (mDate!='all' && info.weather) {
     // display
-    var weather = "<strong>Weather on this day :</strong> " + info.weather + "<br/>"
-    var minTemp = "<strong>Min. temperature (°C) :</strong> " + info.min_temp + "<br/>"
-    var maxTemp = "<strong>Max. temperature (°C) :</strong> " + info.max_temp
+    var weather = '<i class="wi wi-horizon"></i> ' +
+      "<strong>On this day :</strong> " +
+      info.weather + "<br/>"
+    var minTemp = '<i class="wi wi-thermometer-internal"></i> ' +
+      "<strong>Min. temperature (°C) :</strong> " +
+      info.min_temp + "<br/>"
+    var maxTemp = '<i class="wi wi-thermometer-exterior"></i> ' +
+      "<strong>Max. temperature (°C) :</strong> " +
+      info.max_temp + "<br/>"
+    var weatherIcon = "<div class='bigwi'>" + 
+      getWeatherIcon(info.weather) + "</div>"
     var weatherTitle = "<h4>Weather</h4>"
     $('#weather .text').empty()
     $('#weather .text').append(weatherTitle)
     $('#weather .text').append(weather)
     $('#weather .text').append(minTemp)
     $('#weather .text').append(maxTemp)
+    $('#weather .text').append(weatherIcon)
     $('#weather').css('width', '40%')
     $('#weather').css('min-height', '250px')
     $('#gender').width('50%')

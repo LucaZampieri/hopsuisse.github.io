@@ -26,7 +26,8 @@ permalink: /runners/
 		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
 		{value:"Veillard Steeve 1982",data:"veillardsteeve1982"},
 		{value:"Chanon Theo 2005",data:"chanontheo2005"},
-		{value:"Schmidt Peter 1952",data:"schmidtpeter1952"}
+		{value:"Schmidt Peter 1952",data:"schmidtpeter1952"},
+		{value:"M\u00fcller Gu\u00e9nael 1998", data:"mullerguenael1998"}
 	];
 	var currentRunner = null;
 </script>
@@ -35,6 +36,8 @@ permalink: /runners/
 	// TODO: 	- complete list of runners -> transfer folder manually, 
 	//			  do NOT change the _config.yml
 
+
+// --------------- MAPS ------------------ //
 /* Draw a map of Switzerland with pointers where a runner has done a 
 race, if coordinates are known. Only in the situation in which "All 
 races" is selected. */
@@ -125,9 +128,9 @@ function drawMap() {
 	}
 }
 
+// --------------- RACE AND DATE SELECTION -------------------- //
 /* Callback function for race selection */
 function raceChanged() {
-	console.log('raceChanged() entered')
 	console.log(currentRunner)
 	// Get selected racekey
 	var selectedRace = $("#race").val();
@@ -139,7 +142,6 @@ function raceChanged() {
 		}
 		if (selectedRace == 'all') {
 			drawFullMap()
-				
 		} else {
 			drawMap()
 			// Create select menu for dates
@@ -154,7 +156,12 @@ function raceChanged() {
 <script type="text/javascript">
 /* Callback function for date selection */
 function dateChanged() {
-	//drawMap()
+	
+}
+
+function perfChanged() {
+	var selectedPerf = $("#perf").val();
+	drawPerformance(selectedPerf);
 }
 
 /* Populate the race select menu with the available races for current runner
@@ -216,6 +223,115 @@ function fillDateSelect(dates) {
 	}
 }
 
+function fillPerformanceSelect() {
+	$('#perf').append("<option value='speed'> Speed </option>")
+	$('#perf').append("<option value='pace'> Pace </option>")
+	$('#perf').append("<option value='rank'> Ranking </option>")
+	$('#perf').append("<option value='distance'> Distance </option>")
+	drawPerformance('speed');
+}
+
+// ----------------- PERFORMANCE GRAPHS ---------------------- //
+function getRunnerInfos() {
+	var speed = [];
+	var pace = [];
+	var rank = []; // TODO: to normalize!
+	var distance = [];
+	var date = [];
+	var selectedRace = $('#race').val()
+	if (selectedRace == 'all') {
+		for (var keyRace in currentRunner.races) {
+			for (var keyDate in currentRunner.races[keyRace].date) {
+				for (var keyCat in currentRunner.races[keyRace].date[keyDate].categories) {
+					var interest = currentRunner.races[keyRace].date[keyDate].categories[keyCat];
+					speed.push(interest.time)
+					pace.push(interest.pace)
+					rank.push(interest.rank)
+					distance.push(interest.distance)
+					date.push(keyDate)
+				}
+			}
+		}
+	} else {
+		for (var keyDate in currentRunner.races[selectedRace].date) {
+			for (var keyCat in currentRunner.races[selectedRace].date[keyDate].categories) {
+				var interest = currentRunner.races[selectedRace].date[keyDate].categories[keyCat];
+				speed.push(interest.time)
+				pace.push(interest.pace)
+				rank.push(interest.rank)
+				distance.push(interest.distance)
+				date.push(keyDate)
+			}
+		}
+	}
+	return [distance, pace, rank, speed, date];
+}
+function getTotalNumberOfRunners(keyRace) {
+	
+}
+
+function drawPerformance(keyPerf) {
+	var infos = getRunnerInfos();
+	var perfId = 0;
+	var units = "";
+	switch (keyPerf) {
+		case 'distance':
+			perfId = 0;
+			units = 'km';
+			break;
+		case 'pace':
+			perfId = 1;
+			units = 's/km';
+			break;
+		case 'rank':
+			perfId = 2;
+			break;
+		default: //'speed'
+			perfId = 3;
+			units = 'm/s';
+			break;
+	}
+	//var date = ['date'].concat(infos[4]);
+	var chart = c3.generate({
+		bindto: '#globaldesc .perfGraph',
+		data: {
+		columns: [
+			[keyPerf].concat(infos[perfId])
+		]
+		}
+	});
+	
+	var sumPerf = infos[perfId].reduce(function(a, b) { return a + b; });
+	var avgPerf = sumPerf / infos[perfId].length;
+	var maxPerf = infos[perfId].reduce(function(a, b) {
+		if (a>b) return a;
+		else return b;
+	});
+	var minPerf = infos[perfId].reduce(function(a, b) {
+		if (a>b) return b;
+		else return a;
+	});
+	
+	var meanPerfStr = "<p>Mean " + keyPerf + ": " + avgPerf + " " + units + "</p>";
+	var maxPerfStr = "<p>Maximal " + keyPerf + ": " + maxPerf + " " + units + "</p>";
+	var minPerfStr = "<p>Minimal " + keyPerf + ": " + minPerf + " " + units + "</p>";
+	var description = "<div class='text'>" + meanPerfStr + maxPerfStr + minPerfStr + "</div>";
+	$(description).replaceAll('#globaldesc .text')
+}
+
+function drawSingleRunPerformance() {
+	
+}
+
+function selectOnlyThis(elem,id) {
+	for (var i = 1;i <= 4; i++)
+    {
+        document.getElementById("perfCheck" + i).checked = false;
+    }
+    elem.checked = true;
+}
+
+// -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for race selection through search bar */
 $(function(){
 	$('#autocomplete').autocomplete({ 
@@ -233,18 +349,31 @@ $(function(){
 				// Empty HTML
 				$('#outputbox').empty()
 				
+				// Title + personal information
+				var today = new Date();
+				var year = today.getFullYear();
+				var sex = 'homme';
+				if (currentRunner.sex == 'F')
+					sex = 'femme';
+				var title = "<h2>"+ currentRunner.name +" <small>"
+					+ (year - currentRunner.birth) +" ans, "+ sex 
+					+".</small></h2>";
+				$('#outputbox').append(title);
+				
 				// Create select menu for races
 				var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
 				$('#outputbox').append(raceSelect)
 				var sortedRaces = fillRaceSelect(data.races)
 				
 				var selectedRace = $("#race").val();
-				//var selectedDate = $("#date").val();
-				$('#globaldesc').empty()
 				$('#outputbox').append("<div id='globaldesc'></div>")
-				$('#globaldesc').append("<div class='text'></div>")
 				$('#globaldesc').append("<div id='map'></div>")
 				
+				var performanceSelect = "<select id='perf' onchange='perfChanged();'></select>"
+				$('#globaldesc').append("<div class='perfGraph'></div>")
+				$('#globaldesc').append(performanceSelect)
+				$('#globaldesc').append("<div class='text'></div>")
+				fillPerformanceSelect();
 			})
 		}
 	});

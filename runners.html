@@ -5,7 +5,8 @@ permalink: /runners/
 ---
 
 <div id="searchfield">
-  <h3>Search for a runner :</h3>
+  <h3>Search for a runner... <a id="randomlink" onclick="displayRandom();">or
+feel lucky !</a></h3>
   <form>
     <input type="text" name="runner" class="biginput" id="autocomplete" autocomplete="on"
     value="Type the name of a runner here..."
@@ -35,6 +36,10 @@ permalink: /runners/
 	// TODO: 	- complete list of runners -> transfer folder manually, 
 	//			  do NOT change the _config.yml
 
+function displayRandom() {
+	var entry = Math.floor(Math.random() * runners.length);
+	loadAndDisplay(runners[entry].data)
+}
 
 // --------------- MAPS ------------------ //
 /* Draw a map of Switzerland with pointers where a runner has done a 
@@ -257,7 +262,7 @@ function getRunnerInfos() {
 	var distance = [];
 	var date = [];
 	var selectedRace = $('#race').val();
-	if (selectedRace = " ") {
+	if (!selectedRace || selectedRace == ' ') {
 		selectedRace = 'all';
 	}
 
@@ -276,6 +281,9 @@ function getRunnerInfos() {
 		}
 	} else {
 		var selectedDate = $('#date').val();
+		if (!selectedDate || selectedDate == " ") {
+			selectedDate = 'all';
+		}
 		if (selectedDate == 'all') {
 			for (var keyDate in currentRunner.races[selectedRace].date) {
 				for (var keyCat in currentRunner.races[selectedRace].date[keyDate].categories) {
@@ -369,10 +377,6 @@ function drawPerformance(keyPerf) {
 	}
 }
 
-function drawSingleRunPerformance() {
-	
-}
-
 function selectOnlyThis(elem,id) {
 	for (var i = 1;i <= 4; i++)
     {
@@ -381,106 +385,109 @@ function selectOnlyThis(elem,id) {
     elem.checked = true;
 }
 
+function loadAndDisplay(encodedName) {
+	// Load JSON data
+	$.getJSON("../runnerdata/" + encodedName + ".json", function(data) {
+		console.log(data)
+
+		// Set 'global' var to selected race
+		currentRunner = data
+
+		// Empty HTML
+		$('#outputbox').empty()
+		
+		// Title + personal information
+		var today = new Date();
+		var year = today.getFullYear();
+		var sex = 'homme';
+		if (currentRunner.sex == 'F')
+			sex = 'femme';
+		var title = "<h2>"+ currentRunner.name +" <small>"
+			+ (year - currentRunner.birth) +" ans, "+ sex 
+			+".</small></h2>";
+		$('#outputbox').append(title);
+							
+		$('#outputbox').append("<div id='globaldesc'></div>")
+		$('#globaldesc').append("<div id='map'></div>")
+		
+		// Create select menu for races, if > 1
+		if (Object.keys(data.races).length > 1) {
+			
+			$('#globaldesc').append("<div class='text'></div>")
+			var raceNoSelect = 
+				"<p>This runner has participated to " + Object.keys(data.races).length
+				+ " competitions. Click on them on the map or choose them below for more details.</p>";
+			$('#globaldesc .text').append(raceNoSelect);
+			
+			// Race select menu
+			var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
+			$('#outputbox').append(raceSelect)
+			fillRaceSelect(data.races)
+			
+			// Display performance + perf select menu
+			$('#outputbox').append("<div id='performance'></div>")
+			var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+			$('#performance').append(performanceSelect)
+			$('#performance').append("<div class='chart'></div>")
+			$('#performance').append("<div class='text'></div>")
+			fillPerformanceSelect();
+
+		} else {
+			
+			$('#globaldesc').append("<div class='text'></div>")
+			var raceNoSelect = 
+				"<p>This runner has participated to only one competition: " 
+				+ Object.keys(data.races)[0] + "</p>";
+			$('#globaldesc .text').append(raceNoSelect);
+			drawFullMap();	
+
+			// Create select menu for dates, if > 1
+			var selectedRace = Object.keys(data.races)[0];
+			
+			if (Object.keys(data.races[selectedRace].date).length > 1) {
+				
+				var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
+				$('#outputbox').append(dateSelect)
+				fillDateSelect(currentRunner.races[selectedRace].date)
+				
+				$('#outputbox').append("<div id='performance'></div>")
+				var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+				$('#performance').append(performanceSelect)
+				$('#performance').append("<div class='chart'></div>")
+				$('#performance').append("<div class='text'></div>")
+				fillPerformanceSelect();
+				
+			} else {
+
+				var mDate = currentRunner.races[selectedRace].date;
+				var dateId = Object.keys(mDate)[0];
+				var raceNoSelect = 
+					"<p>This runner has participated to only one competition: " 
+					+ Object.keys(data.races)[0] + ". <br>Run date: " 
+					+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
+					+ mDate[dateId].year + "</p>";
+				$(raceNoSelect).replaceAll('#globaldesc .text');
+				
+				$('#outputbox').append("<div id='performance'></div>")
+				$('#performance').append("<div class='chart'></div>")
+				$('#performance').append("<div class='text'></div>")
+				drawPerformance('speed')
+
+			}
+		
+		}
+		
+	})
+}
+
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for race selection through search bar */
 $(function(){
 	$('#autocomplete').autocomplete({ 
 		delay: 0,
 		lookup: runners,
-
 		onSelect: function (suggestion) {
-			// Load JSON data
-			$.getJSON("../runnerdata/" + suggestion.data + ".json", function(data) {
-				console.log(data)
-        
-				// Set 'global' var to selected race
-				currentRunner = data
-  
-				// Empty HTML
-				$('#outputbox').empty()
-				
-				// Title + personal information
-				var today = new Date();
-				var year = today.getFullYear();
-				var sex = 'homme';
-				if (currentRunner.sex == 'F')
-					sex = 'femme';
-				var title = "<h2>"+ currentRunner.name +" <small>"
-					+ (year - currentRunner.birth) +" ans, "+ sex 
-					+".</small></h2>";
-				$('#outputbox').append(title);
-									
-				$('#outputbox').append("<div id='globaldesc'></div>")
-				$('#globaldesc').append("<div id='map'></div>")
-				
-				// Create select menu for races, if > 1
-				if (Object.keys(data.races).length > 1) {
-					
-					$('#globaldesc').append("<div class='text'></div>")
-					var raceNoSelect = 
-						"<p>This runner has participated to " + Object.keys(data.races).length
-						+ " competitions. Click on them on the map or choose them below for more details.</p>";
-					$('#globaldesc .text').append(raceNoSelect);
-					
-					// Race select menu
-					var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
-					$('#outputbox').append(raceSelect)
-					fillRaceSelect(data.races)
-					
-					// Display performance + perf select menu
-					$('#outputbox').append("<div id='performance'></div>")
-					var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
-					$('#performance').append(performanceSelect)
-					$('#performance').append("<div class='chart'></div>")
-					$('#performance').append("<div class='text'></div>")
-					fillPerformanceSelect();
-
-				} else {
-					
-					$('#globaldesc').append("<div class='text'></div>")
-					var raceNoSelect = 
-						"<p>This runner has participated to only one competition: " 
-						+ Object.keys(data.races)[0] + "</p>";
-					$('#globaldesc .text').append(raceNoSelect);
-					drawFullMap();	
-
-					// Create select menu for dates, if > 1
-					var selectedRace = Object.keys(data.races)[0];
-					
-					if (Object.keys(data.races[selectedRace].date).length > 1) {
-						
-						var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
-						$('#outputbox').append(dateSelect)
-						fillDateSelect(currentRunner.races[selectedRace].date)
-						
-						$('#outputbox').append("<div id='performance'></div>")
-						var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
-						$('#performance').append(performanceSelect)
-						$('#performance').append("<div class='chart'></div>")
-						$('#performance').append("<div class='text'></div>")
-						fillPerformanceSelect();
-						
-					} else {
-
-						var mDate = currentRunner.races[selectedRace].date;
-						var dateId = Object.keys(mDate)[0];
-						var raceNoSelect = 
-							"<p>This runner has participated to only one competition: " 
-							+ Object.keys(data.races)[0] + ". <br>Run date: " 
-							+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
-							+ mDate[dateId].year + "</p>";
-						$(raceNoSelect).replaceAll('#globaldesc .text');
-						
-						$('#outputbox').append("<div id='performance'></div>")
-						$('#performance').append("<div class='chart'></div>")
-						$('#performance').append("<div class='text'></div>")
-						drawPerformance('speed')
-
-					}
-				
-				}
-				
-			})
+			loadAndDisplay(suggestion.data);
 		}
 	});
 }); 

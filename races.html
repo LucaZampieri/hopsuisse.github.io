@@ -21,19 +21,30 @@ permalink: /races/
 
 
 <script type="text/javascript">
-  var myMap = null;
-  var races = [
-    {% for race in site.data.racesnames %}
-    {value:"{{race[1]}}",data:"{{race[0]}}"},
-    {% endfor %}
-  ];
-  var currentRace = null;
+// Query
+var url = window.location.href;
+var raceQuery = null;
+if (url.split("?").length > 1) {
+  raceQuery = url.split('?').pop().split('=').pop();
+}
+// Races hashtable
+var races = [
+  {% for race in site.data.racesnames %}
+  {value:"{{race[1]}}",data:"{{race[0]}}"},
+  {% endfor %}
+];
+// Initializations
+var currentRace = null;
+var myMap = null;
 </script>
+
 <script type="text/javascript">
 
+/* Display information for a randomly chosen race */
 function displayRandom() {
+  // Get random index
   var entry = Math.floor(Math.random() * races.length);
-  console.log(entry)
+  // Load JSON file and display
   loadAndDisplay(races[entry].data)
 }
 
@@ -55,9 +66,12 @@ function drawMap() {
         maxZoom: 18,
         ext: 'png'
       }).addTo(myMap);
+      // Add marker
+      var marker = L.marker([latitude, longitude]).addTo(myMap);
     } else {
       $('#map').empty()
       $('#map').width(0)
+      $('#map').height(0)
       $('#globaldesc .text').width('100%')
     } 
   }
@@ -377,7 +391,7 @@ function displayWeather() {
     $('#weather .text').append(maxTemp)
     $('#weather .text').append(weatherIcon)
     $('#weather').css('width', '40%')
-    $('#weather').css('min-height', '250px')
+    $('#weather').css('min-height', '380px')
     $('#gender').width('50%')
   } else {
     // hide
@@ -408,16 +422,17 @@ function loadAndDisplay(encodedName) {
     $('#outputbox').append("<div id='globaldesc'></div>")
     $('#globaldesc').append("<div class='text'></div>")
     $('#globaldesc').append("<div id='map'></div>")
+    var numDates = Object.keys(currentRace.dates).length
+    var plural = numDates > 1 ? 's' : ''
     var description =
-      '<p>Information about '+ currentRace.name +
-      ' is available for '+ Object.keys(currentRace.dates).length +
-      ' edition(s).<br/><a href="http://www.google.com/search?q=' +
+    '<p>Information about <em>'+ currentRace.name +
+    '</em> is available for '+ numDates +
+      ' edition'+plural+'.<br/><a href="http://www.google.com/search?q=' +
       currentRace.name.replace(/ /g,'+') + '">Search about this on Google</a></p>'
     $('#globaldesc .text').append(description)
     drawMap()
 
     // ---- PARTICIPATION TRENDS ----
-
     if (Object.keys(currentRace.dates).length > 1) {
       $('#outputbox').append("<div id='participation'></div>")
       $('#participation').append("<div class='text'></div>")
@@ -477,5 +492,10 @@ $(function(){
     }
   });
 });
+
+// Page load end : check if a query has been made
+if (raceQuery) {
+  loadAndDisplay(raceQuery);
+}
 </script>
 

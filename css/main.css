@@ -122,6 +122,7 @@ select#date, select#distance {
   padding: 6px;
   padding-left: 10px;
   margin: 10px;
+  margin-left: 0;
   font-size: medium;
   font-family: 'Inconsolata', monospace;
   color: #666666;
@@ -137,10 +138,11 @@ select#date, select#distance {
 }
 
 .bigwi {
-  width = 100%;
-  text-align: right;
-  font-size: 50px;
-  color: #666666;
+  width: 100%;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 80px;
+  color: #d1d1d1;
 }
 
 /* CHARTS (GLOBAL) */

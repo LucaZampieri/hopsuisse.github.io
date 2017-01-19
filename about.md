@@ -10,6 +10,7 @@ This website summarizes a school project for the [Applied Data
 Analysis](https://adaepfl.github.io) course at [EPFL](https://epfl.ch).
 
 This project has several goals and challenges :
+
 * retrieve "running" data from [Datasport](https://www.datasport.com), the website
   of a sport event organizer, on which one can find results
 * run exploratory and statistical analysis on this data
@@ -26,6 +27,7 @@ started quickly.
 ## About the team
 
 We are five students currently at EPFL :
+
 * Ondine Chanon
 * Antonio Iubatti
 * Gianrocco Lazzari
@@ -38,6 +40,7 @@ We decided to use a Jekyll-powered website hosted on GitHub Pages for the sake
 of simplicity and ease of use.
 
 We also use several libraries and tools throughout the pages :
+
 * [C3.js](http://c3js.org) on top of [D3.js](https://d3js.org)
 * [jQuery-Autocomplete](https://github.com/devbridge/jQuery-Autocomplete)
 * [Leaflet](http://leafletjs.com)

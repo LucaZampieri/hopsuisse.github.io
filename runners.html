@@ -21,6 +21,9 @@ feel lucky !</a></h3>
 
 
 <script type="text/javascript">
+	
+	// /races?race=<encoded race name>
+	
 	var myMap = null;
 	var runners = [
 		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
@@ -29,6 +32,11 @@ feel lucky !</a></h3>
 		{value:"Schmidt Peter 1952",data:"schmidtpeter1952"},
 		{value:"M\u00fcller Gu\u00e9nael 1998", data:"mullerguenael1998"}
 	];
+	/* var races = [
+		{% for race in site.data.racesnames %}
+		{"{{race[1]}}":"{{race[0]}}"},
+		{% endfor %}
+	]; */
 	var currentRunner = null;
 </script>
 
@@ -271,9 +279,11 @@ function fillPerformanceSelect() {
 function getRunnerInfos() {
 	var speed = [];
 	var pace = [];
-	var rank = []; // TODO: to normalize!
+	var rank = [];
 	var distance = [];
-	var date = [];
+	//var date = [];
+	var totRunners = [];
+	var normalizedRank = [];
 	var selectedRace = $('#race').val();
 	if (!selectedRace || selectedRace == ' ') {
 		selectedRace = Object.keys(currentRunner.races)[0];
@@ -284,11 +294,14 @@ function getRunnerInfos() {
 			for (var keyDate in currentRunner.races[keyRace].date) {
 				for (var keyCat in currentRunner.races[keyRace].date[keyDate].categories) {
 					var interest = currentRunner.races[keyRace].date[keyDate].categories[keyCat];
+					var tot = getTotalNumberOfRunners(keyRace, keyDate, keyCat);
+					totRunners.push(tot)
+					normalizedRank.push(interest.rank/tot*100)
 					speed.push(interest.time)
 					pace.push(interest.pace)
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					date.push(keyDate)
+					//date.push(keyDate)
 				}
 			}
 		}
@@ -301,29 +314,42 @@ function getRunnerInfos() {
 			for (var keyDate in currentRunner.races[selectedRace].date) {
 				for (var keyCat in currentRunner.races[selectedRace].date[keyDate].categories) {
 					var interest = currentRunner.races[selectedRace].date[keyDate].categories[keyCat];
+					var tot = getTotalNumberOfRunners(selectedRace, keyDate, keyCat);
+					totRunners.push(tot)
+					normalizedRank.push(interest.rank/tot*100)
 					speed.push(interest.time)
 					pace.push(interest.pace)
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					date.push(keyDate)
+					//date.push(keyDate)
 				}
 			}
 		} else {
 			for (var keyCat in currentRunner.races[selectedRace].date[selectedDate].categories) {
 					var interest = currentRunner.races[selectedRace].date[selectedDate].categories[keyCat];
+					var tot = getTotalNumberOfRunners(selectedRace, selectedDate, keyCat);
+					totRunners.push(tot)
+					normalizedRank.push(interest.rank/tot*100)
 					speed.push(interest.time)
 					pace.push(interest.pace)
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					date.push(keyDate)
+					//date.push(keyDate)
 				}
 		}
 	}
-	return [distance, pace, rank, speed, date];
+	return [distance, pace, rank, speed, totRunners, normalizedRank];
 }
 
-function getTotalNumberOfRunners(keyRace) {
-	
+function getTotalNumberOfRunners(keyRace, raceDate, raceDistance) {
+	var count = getGenderCount(keyRace, raceDate, raceDistance);
+	var totCount = count['men'] + count['women'];
+	return totCount;
+}
+
+// TODO delete this function once coordinated with Max:
+function getGenderCount(keyRace, raceDate, raceDistance) {
+	return {'men':1000, 'women':1000};
 }
 
 function drawPerformance(keyPerf) {
@@ -343,14 +369,13 @@ function drawPerformance(keyPerf) {
 				units = 's/km';
 				break;
 			case 'rank':
-				perfId = 2;
+				perfId = 5;
 				break;
 			default: //'speed'
 				perfId = 3;
 				units = 'km/h';
 				break;
 		}
-		//var date = ['date'].concat(infos[4]);
 		var chart = c3.generate({
 			bindto: '#performance .chart',
 			data: {
@@ -362,18 +387,33 @@ function drawPerformance(keyPerf) {
 		
 		var sumPerf = infos[perfId].reduce(function(a, b) { return a + b; });
 		var avgPerf = sumPerf / infos[perfId].length;
-		var maxPerf = infos[perfId].reduce(function(a, b) {
-			if (a>b) return a;
-			else return b;
-		});
-		var minPerf = infos[perfId].reduce(function(a, b) {
-			if (a>b) return b;
-			else return a;
-		});
-		
-		var meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf + " " + units + "<br>";
-		var maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
-		var minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
+		var meanPerfStr = "";
+		var maxPerfStr = "";
+		var minPerfStr = "";
+		if (keyPerf != 'rank') {
+			var maxPerf = infos[perfId].reduce(function(a, b) {
+				if (a>b) return a;
+				else return b;
+			});
+			var minPerf = infos[perfId].reduce(function(a, b) {
+				if (a>b) return b;
+				else return a;
+			});
+			meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf + " " + units + "<br>";
+			maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
+			minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
+		} else { //Case rank
+			var totRunners = infos[4];
+			var rank = infos[2];
+			var maxId = infos[perfId].indexOf(Math.min.apply(null, infos[perfId]));
+			var minId = infos[perfId].indexOf(Math.max.apply(null, infos[perfId]));
+			var maxPerf = rank[maxId];
+			var minPerf = rank[minId];
+			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
+				+ "% of the runners.<br>";
+			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + totRunners[maxId] + " runners.<br>";
+			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + totRunners[minId] + " runners.";
+		}
 		var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
 		$(description).replaceAll('#performance .text')
 
@@ -385,7 +425,7 @@ function drawPerformance(keyPerf) {
 		}
 		var perfSpeed = "<u>Speed</u>: " + infos[3][0] + " km/h<br>";
 		var perfPace = "<u>Pace</u>: " + infos[1][0] + " s/km<br>";
-		var perfRank = "<u>Rank</u>: " + infos[2][0] + "<br>";
+		var perfRank = "<u>Rank</u>: " + infos[2][0] + " out of " + infos[4][0] + " runners.<br>";
 		var perfDistance = "<u>Distance</u>: " + infos[0][0] + " km";
 		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
 		$(description).replaceAll('#performance .text')

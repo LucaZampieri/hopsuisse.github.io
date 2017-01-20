@@ -22,8 +22,6 @@ feel lucky !</a></h3>
 
 <script type="text/javascript">
 	
-	// /races?race=<encoded race name>
-	
 	var myMap = null;
 	var runners = [
 		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
@@ -42,6 +40,13 @@ feel lucky !</a></h3>
 function displayRandom() {
 	var entry = Math.floor(Math.random() * runners.length);
 	loadAndDisplay(runners[entry].data)
+}
+
+function encodeName(name) {
+	function toLower(str) {
+		return str.toLowerCase();
+	}
+	return name.replace(/[^0-9a-zA-Z+]/g, '').replace(/[A-Z]/g, toLower);
 }
 
 // --------------- MAPS ------------------ //
@@ -77,6 +82,7 @@ function addMarkers() {
 		var nbParticipation = Object.keys(currentRace.date).length;
 		if (mLat!=null && mLong!=null) {
 			marker = L.marker([mLat, mLong]).addTo(myMap);
+			console.log(encodeName(key))
 			var popupMarker = "<b href='#' onclick='clickPopupFullMap(this)' " 
 				+ "onmouseover='mouseOverPopupFullMap(this)' "
 				+ "onmouseout='mouseOutPopupFullMap(this)'>" + key 
@@ -85,6 +91,8 @@ function addMarkers() {
 				popupMarker += "s.";
 			else
 				popupMarker += ".";
+			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(key);
+			popupMarker += "<br><a href=" + mLink + ">Race general details</a>";
 			marker.bindPopup(popupMarker)
 		}
 	}
@@ -156,18 +164,29 @@ function raceChanged() {
 
 	// Update dates select
 	if (currentRunner) {
-		if ($("#date")){
-			$('#date').remove(); 
+		if ($("#chooseDate")){
+			$("#date").remove();
+			$('#chooseDate').remove(); 
+		}
+		if ($("#statRace")){
+			$("#statRace").remove();
 		}
 		if (selectedRace == 'all') {
 			drawFullMap()
 		} else {
 			drawMap()
 			var dates = currentRunner.races[selectedRace].date;
+			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(selectedRace);
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
+			
 			if (Object.keys(dates).length > 1) {
 				// Create select menu for dates
-				var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
-				$('#selects').append(dateSelect)
+				var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
+					+ "<select id='date' onchange='dateChanged();'></select></p>"
+				$('#selects').append(chooseDate)
 				fillDateSelect(dates)
 			} else {
 				var dateId = Object.keys(dates)[0];
@@ -452,8 +471,11 @@ function loadAndDisplay(encodedName) {
 		var today = new Date();
 		var year = today.getFullYear();
 		var sex = 'homme';
-		if (currentRunner.sex == 'F')
+		var pronom = "He";
+		if (currentRunner.sex == 'F') {
 			sex = 'femme';
+			pronom = 'She';
+		}
 		var title = "<h2>"+ currentRunner.name +" <small>"
 			+ (year - currentRunner.birth) +" ans, "+ sex 
 			+".</small></h2>";
@@ -467,8 +489,8 @@ function loadAndDisplay(encodedName) {
 			
 			$('#globaldesc').append("<div class='text'></div>")
 			var raceNoSelect = 
-				"<p>This runner has participated to " + Object.keys(data.races).length
-				+ " competitions. Click on them on the map or choose them below for more details.</p>";
+				"<p>This runner has participated to <b>" + Object.keys(data.races).length
+				+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
 			$('#globaldesc .text').append(raceNoSelect);
 			
 			$('#outputbox').append("<div id='selects'></div>")
@@ -476,6 +498,7 @@ function loadAndDisplay(encodedName) {
 			var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
 			$('#selects').append(raceSelect)
 			fillRaceSelect(data.races)
+			$('#selects').append("<div class='text'></div>")
 			
 			// Display performance + perf select menu
 			$('#outputbox').append("<div id='performance'></div>")
@@ -489,21 +512,34 @@ function loadAndDisplay(encodedName) {
 		} else {
 			
 			$('#globaldesc').append("<div class='text'></div>")
-			var raceNoSelect = 
-				"<p>This runner has participated to only one competition: " 
-				+ Object.keys(data.races)[0] + "</p>";
-			$('#globaldesc .text').append(raceNoSelect);
-			drawFullMap();	
+			var keyRace = Object.keys(data.races)[0];
+			drawFullMap();
+			
+			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(keyRace);
 
 			// Create select menu for dates, if > 1
 			var selectedRace = Object.keys(data.races)[0];
 			
 			if (Object.keys(data.races[selectedRace].date).length > 1) {
-				
+
+				var nbParticipation = Object.keys(data.races[selectedRace].date).length;
+				var raceNoSelect = 
+					"<p>This runner has participated to only one competition: <b>" 
+					+ keyRace + "</b>.<br> " + pronom + " has participated to it <b>"
+					+ nbParticipation + " times</b>.</p>";
+				$('#globaldesc .text').append(raceNoSelect);
+								
 				$('#outputbox').append("<div id='selects'></div>")
+				$('#selects').append("<div class='text'></div>")
+				var statRace = 
+					"<p id='statRace'>For more general statistics about this race, click <a href=" 
+					+ mLink + ">here</a>.</p>"
+				$('#selects .text').append(statRace);
+				
 				// Date menu select
-				var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
-				$('#selects').append(dateSelect)
+				var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
+					+ "<select id='date' onchange='dateChanged();'></select></p>"
+				$('#selects').append(chooseDate)
 				fillDateSelect(currentRunner.races[selectedRace].date)
 				
 				$('#outputbox').append("<div id='performance'></div>")
@@ -523,7 +559,14 @@ function loadAndDisplay(encodedName) {
 					+ Object.keys(data.races)[0] + "</b>. <br>Run date: <b>" 
 					+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
 					+ mDate[dateId].year + "</b>.</p>";
-				$(raceNoSelect).replaceAll('#globaldesc .text');
+				$('#globaldesc .text').append(raceNoSelect)
+				
+				$('#outputbox').append("<div id='selects'></div>")
+				$('#selects').append("<div class='text'></div>")
+				var statRace = 
+					"<p id='statRace'>For more general statistics about this race, click <a href=" 
+					+ mLink + ">here</a>.</p>"
+				$('#selects .text').append(statRace);
 				
 				$('#outputbox').append("<div id='performance'></div>")
 				$('#performance').append("<h3> Performances:</h3>")
@@ -532,7 +575,6 @@ function loadAndDisplay(encodedName) {
 				drawPerformance('speed')
 
 			}
-		
 		}
 		
 	})

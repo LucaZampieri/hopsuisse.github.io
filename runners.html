@@ -32,11 +32,6 @@ feel lucky !</a></h3>
 		{value:"Schmidt Peter 1952",data:"schmidtpeter1952"},
 		{value:"M\u00fcller Gu\u00e9nael 1998", data:"mullerguenael1998"}
 	];
-	/* var races = [
-		{% for race in site.data.racesnames %}
-		{"{{race[1]}}":"{{race[0]}}"},
-		{% endfor %}
-	]; */
 	var currentRunner = null;
 </script>
 
@@ -168,12 +163,17 @@ function raceChanged() {
 			drawFullMap()
 		} else {
 			drawMap()
-			
-			if (Object.keys(currentRunner.races[selectedRace].date).length > 1) {
+			var dates = currentRunner.races[selectedRace].date;
+			if (Object.keys(dates).length > 1) {
 				// Create select menu for dates
 				var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
 				$('#selects').append(dateSelect)
-				fillDateSelect(currentRunner.races[selectedRace].date)
+				fillDateSelect(dates)
+			} else {
+				var dateId = Object.keys(dates)[0];
+				var date = "<p id='date'>Run date: <b>" + dates[dateId].day + "/" 
+					+ dates[dateId].month + "/" + dates[dateId].year + "</b></p>"
+				$('#selects').append(date)
 			}
 		}
 		var selectedPerf = $("#perf").val();

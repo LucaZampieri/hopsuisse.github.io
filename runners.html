@@ -281,7 +281,6 @@ function getRunnerInfos() {
 	var pace = [];
 	var rank = [];
 	var distance = [];
-	//var date = [];
 	var totRunners = [];
 	var normalizedRank = [];
 	var selectedRace = $('#race').val();
@@ -297,11 +296,10 @@ function getRunnerInfos() {
 					var tot = getTotalNumberOfRunners(keyRace, keyDate, keyCat);
 					totRunners.push(tot)
 					normalizedRank.push(interest.rank/tot*100)
-					speed.push(interest.time)
-					pace.push(interest.pace)
+					speed.push(interest.distance/interest.time*3600)
+					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					//date.push(keyDate)
 				}
 			}
 		}
@@ -317,11 +315,10 @@ function getRunnerInfos() {
 					var tot = getTotalNumberOfRunners(selectedRace, keyDate, keyCat);
 					totRunners.push(tot)
 					normalizedRank.push(interest.rank/tot*100)
-					speed.push(interest.time)
-					pace.push(interest.pace)
+					speed.push(interest.distance/interest.time*3600)
+					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					//date.push(keyDate)
 				}
 			}
 		} else {
@@ -330,11 +327,10 @@ function getRunnerInfos() {
 					var tot = getTotalNumberOfRunners(selectedRace, selectedDate, keyCat);
 					totRunners.push(tot)
 					normalizedRank.push(interest.rank/tot*100)
-					speed.push(interest.time)
-					pace.push(interest.pace)
+					speed.push(interest.distance/interest.time*3600)
+					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
 					distance.push(interest.distance)
-					//date.push(keyDate)
 				}
 		}
 	}
@@ -366,7 +362,7 @@ function drawPerformance(keyPerf) {
 				break;
 			case 'pace':
 				perfId = 1;
-				units = 's/km';
+				units = 'min/km';
 				break;
 			case 'rank':
 				perfId = 5;
@@ -424,7 +420,7 @@ function drawPerformance(keyPerf) {
 			$('#perf').remove(); 
 		}
 		var perfSpeed = "<u>Speed</u>: " + infos[3][0] + " km/h<br>";
-		var perfPace = "<u>Pace</u>: " + infos[1][0] + " s/km<br>";
+		var perfPace = "<u>Pace</u>: " + infos[1][0] + " min/km<br>";
 		var perfRank = "<u>Rank</u>: " + infos[2][0] + " out of " + infos[4][0] + " runners.<br>";
 		var perfDistance = "<u>Distance</u>: " + infos[0][0] + " km";
 		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";

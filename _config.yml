@@ -30,7 +30,7 @@ theme: minima
 gems:
   - jekyll-feed
 exclude:
-  - node_modules
+  #- node_modules
   - Gemfile
   - Gemfile.lock
   - runnerdata

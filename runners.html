@@ -19,7 +19,6 @@ feel lucky !</a></h3>
   <p id="outputcontent">Choose a runner and the results will be displayed here.</p>
 </div>
 
-
 <script type="text/javascript">
 	
 	var myMap = null;
@@ -82,7 +81,6 @@ function addMarkers() {
 		var nbParticipation = Object.keys(currentRace.date).length;
 		if (mLat!=null && mLong!=null) {
 			marker = L.marker([mLat, mLong]).addTo(myMap);
-			console.log(encodeName(key))
 			var popupMarker = "<b href='#' onclick='clickPopupFullMap(this)' " 
 				+ "onmouseover='mouseOverPopupFullMap(this)' "
 				+ "onmouseout='mouseOutPopupFullMap(this)'>" + key 
@@ -295,6 +293,213 @@ function fillPerformanceSelect() {
 }
 
 // ----------------- PERFORMANCE GRAPHS ---------------------- //
+
+
+
+/* --- Draws performance chart, given a performance key --- */
+function drawPerformance(keyPerf) {
+	// get the names of all races of currentRunner
+	var raceKeys = Object.keys(currentRunner.races);
+	
+	// get the selected race, or the first one if not specified (not 
+	// specified = currentRunner has only participated to one race)
+	var selectedRace = $('#race').val();
+	if (!selectedRace || selectedRace == ' ') {
+		selectedRace = raceKeys[0];
+	}
+	
+	var chart = null;
+	if (selectedRace == 'all') {
+		// create the chart only with the first race
+		var keyRace1 = raceKeys[0];
+		createPerfChart(keyRace1, keyPerf, chart, true);
+		// then complete the chart with the other races (so the iterator
+		// begins at 1 and not at 0
+		for (var i=1; i<raceKeys.length; i++) {
+			updatePerfChart(raceKeys[i], keyPerf, chart);
+		} 
+	} else {
+		// If a specific race is proposed, create the chart only with 
+		// this race
+		createPerfChart(selectedRace, keyPerf, chart, false);
+	}
+}
+
+/* --- Creates the performance chart from scratch --- */
+function createPerfChart(keyRace, keyPerf, chart, willBeUpdated) {
+	// Find the chosen race date
+	var allDates = Object.keys(currentRunner.races[keyRace].date);
+	
+	// Retreive the encoded name of the json file corresponding to the 
+	// chosen race
+	var encodedName = encodeName(keyRace);
+	
+	// Read the corresponding json file
+	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
+		var currentRace = data;
+		var chartPerf = getAllPerformances(keyPerf, allDates, currentRace);
+		var units = getPerfUnits(keyPerf);
+		
+		if (chartPerf.length > 1 || willBeUpdated) { // Draw chart and write mean statistics
+			chart = c3.generate({
+				bindto: '#performance .chart',
+				data: {
+					columns: [
+						[keyPerf].concat(chartPerf)
+					]
+				}
+			});
+			
+			/* ..... works only if there is only one race..... */ // -----------------------> TODO
+			/* var sumPerf = chartPerf.reduce(function(a, b) { return a+b; });
+			var avgPerf = sumPerf/chartPerf.length;
+			var meanPerfStr = "";
+			var maxPerfStr = "";
+			var minPerfStr = "";
+			if (keyPerf != 'rank') {
+				var maxPerf = chartPerf.reduce(function(a, b) { Math.max(a, b) });
+				var minPerf = chartPerf.reduce(function(a, b) { Math.min(a, b) });
+				meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf + " " + units + "<br>";
+				maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
+				minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
+			} else { // case 'rank'
+				var maxId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+				var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+				var maxPerf = perf[2*maxId];
+				var minPerf = perf[2*minId];
+				meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
+					+ "% of the runners.<br>";
+				maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + perf[2*maxId+1] + " runners.<br>";
+				minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + perf[2*minId+1] + " runners.";
+			}
+			
+			var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
+			$(description).replaceAll('#performance .text') */
+			
+		} else { // Only write the performance
+			$("<div class='chart'></div>").replaceAll('#performance .chart');
+			if ($("#perf")){
+				$('#perf').remove(); 
+			}
+			perf = [];
+			perf.push(getPerformance(currentRace, allDates[0], 'distance'));
+			perf.push(getPerformance(currentRace, allDates[0], 'pace'));
+			perf.push(getPerformance(currentRace, allDates[0], 'rank'));
+			perf.push(getPerformance(currentRace, allDates[0], 'speed'));
+			
+			var perfSpeed = "<u>Speed</u>: " + perf[0] + " km/h<br>";
+			var perfPace = "<u>Pace</u>: " + perf[1] + " min/km<br>";
+			var perfRank = "<u>Rank</u>: " + perf[2] + " out of " + perf[3] + " runners.<br>";
+			var perfDistance = "<u>Distance</u>: " + perf[4] + " km";
+			var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
+			$(description).replaceAll('#performance .text')
+		}
+	})
+}
+
+/* --- Updates an already existing performance chart --- */
+function updatePerfChart(keyRace, keyPerf, chart) {
+	var allDates = Object.keys(currentRunner.races[keyRace].date);
+	
+	// Retreive the encoded name of the json file corresponding to the 
+	// chosen race
+	var encodedName = encodeName(keyRace);
+	
+	// Read the corresponding json file
+	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
+		var currentRace = data;
+		var chartPerf = getAllPerformances(keyPerf, allDates, currentRace);
+		var units = getPerfUnits(keyPerf);
+		
+		chart.load({
+			columns: [
+					[keyPerf].concat(chartPerf)
+				] //, ???
+		});
+	})
+}
+
+function getAllPerformances(keyPerf, allDates, currentRace) {
+	var perf = []
+	
+	var selectedDate = $('#date').val();
+	if (!selectedDate || selectedDate == " ") {
+		selectedDate = allDates[0];
+	}
+	
+	// If all the dates are selected, get the performance of the 
+	// runner during all those dates, otherwise get the performance 
+	// of the runner only on the specified date
+	if (selectedDate == 'all') {
+		for (var j=1; j<allDates.length; j++) {
+			perf.push(getPerformance(currentRace, allDates[j], keyPerf));
+		}
+	} else {
+		perf.push(getPerformance(currentRace, selectedDate, keyPerf));
+	}
+	
+	var chartPerf = perf;
+	if (keyPerf == 'rank') {
+		for (var j=0; j<perf.length; j+=2) {  // take every second element
+			chartPerf.push(perf[j]/perf[j+1]*100);
+		}
+	}
+	
+	return chartPerf;
+}
+
+function getPerfUnits(keyPerf) {
+	var units = '';
+	switch (keyPerf) {
+		case 'distance':
+			units = 'km';
+			break;
+		case 'pace': 
+			units = 'min/km';
+			break;
+		case 'rank': 
+			break;
+		default: // 'speed'
+			units = 'km/h';
+			break;
+	}
+	return units;
+}
+
+/* --- Get the performance of a runner at a specified date --- */
+// Args: date (Object file), keyPerf (string)
+function getPerformance(currentRace, keyDate, keyPerf) {
+	var perf = [];
+	var runnerDate = currentRunner.races[currentRace.name].date[keyDate];
+	var allCategories = Object.keys(runnerDate.categories);
+	
+	for (var k=1; k<allCategories.length; k++) {
+		var interest = runnerDate.categories[allCategories[k]];
+		switch (keyPerf) {
+			case 'distance': // units: km
+				perf.push(interest.distance);
+				break;
+			case 'pace': // units: min/km
+				perf.push(interest.time/(interest.distance*60)); 
+				break;
+			case 'rank': // perf[2*n] = rank, perf[2*n+1] = total 
+						 //number of runners in this race-date-category
+				perf.push(interest.rank);
+				perf.push(currentRace.dates[keyDate].categories[allCategories[k]].count);
+				break;
+			default: //'speed', units: km/h
+				perf.push(interest.distance/interest.time*3600);
+				break;
+		}
+	}
+	
+	return perf;
+}
+
+
+
+
+/*
 function getRunnerInfos() {
 	var speed = [];
 	var pace = [];
@@ -312,9 +517,10 @@ function getRunnerInfos() {
 			for (var keyDate in currentRunner.races[keyRace].date) {
 				for (var keyCat in currentRunner.races[keyRace].date[keyDate].categories) {
 					var interest = currentRunner.races[keyRace].date[keyDate].categories[keyCat];
-					var tot = getTotalNumberOfRunners(keyRace, keyDate, keyCat);
-					totRunners.push(tot)
-					normalizedRank.push(interest.rank/tot*100)
+					//getTotalNumberOfRunners(keyRace, keyDate, keyCat, function(tot) {
+					//		totRunners.push(tot)
+					//		normalizedRank.push(interest.rank/tot*100)
+					//	});
 					speed.push(interest.distance/interest.time*3600)
 					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
@@ -331,9 +537,10 @@ function getRunnerInfos() {
 			for (var keyDate in currentRunner.races[selectedRace].date) {
 				for (var keyCat in currentRunner.races[selectedRace].date[keyDate].categories) {
 					var interest = currentRunner.races[selectedRace].date[keyDate].categories[keyCat];
-					var tot = getTotalNumberOfRunners(selectedRace, keyDate, keyCat);
-					totRunners.push(tot)
-					normalizedRank.push(interest.rank/tot*100)
+					// getTotalNumberOfRunners(selectedRace, keyDate, keyCat, function(tot) {
+					//		totRunners.push(tot)
+					//		normalizedRank.push(interest.rank/tot*100)
+					//	}); 
 					speed.push(interest.distance/interest.time*3600)
 					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
@@ -343,9 +550,10 @@ function getRunnerInfos() {
 		} else {
 			for (var keyCat in currentRunner.races[selectedRace].date[selectedDate].categories) {
 					var interest = currentRunner.races[selectedRace].date[selectedDate].categories[keyCat];
-					var tot = getTotalNumberOfRunners(selectedRace, selectedDate, keyCat);
-					totRunners.push(tot)
-					normalizedRank.push(interest.rank/tot*100)
+					// var tot = getTotalNumberOfRunners(selectedRace, selectedDate, keyCat, function(tot) {
+					//		totRunners.push(tot)
+					//		normalizedRank.push(interest.rank/tot*100)
+					//	}); 
 					speed.push(interest.distance/interest.time*3600)
 					pace.push(interest.time/(interest.distance*60))
 					rank.push(interest.rank)
@@ -354,19 +562,15 @@ function getRunnerInfos() {
 		}
 	}
 	return [distance, pace, rank, speed, totRunners, normalizedRank];
-}
+} */
 
-function getTotalNumberOfRunners(keyRace, raceDate, raceDistance) {
-	var count = getGenderCount(keyRace, raceDate, raceDistance);
-	var totCount = count['men'] + count['women'];
-	return totCount;
-}
+/*function getTotalNumberOfRunners(keyRace, raceDate, raceCat, callback) {
+	var encodedName = encodeName(keyRace);
+ge		callback(data.dates[raceDate].categories[raceCat].count);
+	})
+}*/
 
-// TODO delete this function once coordinated with Max:
-function getGenderCount(keyRace, raceDate, raceDistance) {
-	return {'men':1000, 'women':1000};
-}
-
+/*
 function drawPerformance(keyPerf) {
 	var infos = getRunnerInfos();
 
@@ -446,7 +650,7 @@ function drawPerformance(keyPerf) {
 		$(description).replaceAll('#performance .text')
 
 	}
-}
+} */
 
 function selectOnlyThis(elem,id) {
 	for (var i = 1;i <= 4; i++)

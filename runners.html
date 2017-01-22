@@ -308,21 +308,27 @@ function drawPerformance(keyPerf) {
 	} else if (selectedRace != 'all') {
 		raceKeys = [selectedRace];
 	}
-		
+	
 	createPerfChart(raceKeys, keyPerf);
 }
 
 /* --- Creates the performance chart from scratch --- */
 function createPerfChart(raceKeys, keyPerf) {
 	var chartPerf = [];
+	var generalPerf = [];
 	for (var l=0; l<raceKeys.length; l++){
 		var allDates = Object.keys(currentRunner.races[raceKeys[l]].date);
 		var currentRace = allRacesObject[raceKeys[l]];
-		chartPerf.push(getAllPerformances(keyPerf, allDates, currentRace));
+		var tempPartPerf = getAllPerformances(keyPerf, allDates, currentRace)
+		if (keyPerf == 'rank') {
+			generalPerf = generalPerf.concat(tempPartPerf[1]);
+		}
+		chartPerf.push(tempPartPerf[0]);
 	}
+	console.log(generalPerf)
 	chartPerf = [].concat.apply([], chartPerf);
 	var units = getPerfUnits(keyPerf);
-		
+			
 	if (chartPerf.length > 1) { // Draw chart and write mean statistics
 		var chart = c3.generate({
 			bindto: '#performance .chart',
@@ -350,14 +356,14 @@ function createPerfChart(raceKeys, keyPerf) {
 			maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
 			minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
 		} else { // case 'rank'
-			var maxId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+			var maxId = chartPerf.indexOf(Math.max.apply(null, chartPerf));
 			var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
-			var maxPerf = perf[maxId][0];
-			var minPerf = perf[minId][0];
+			var maxPerf = generalPerf[maxId][0];
+			var minPerf = generalPerf[minId][0];
 			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
 				+ "% of the runners.<br>";
-			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + perf[maxId][1] + " runners.<br>";
-			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + perf[minId][1] + " runners.";
+			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + generalPerf[maxId][1] + " runners.<br>";
+			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + generalPerf[minId][1] + " runners.";
 		}
 		
 		var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
@@ -421,14 +427,15 @@ function getAllPerformances(keyPerf, allDates, currentRace) {
 		}
 	}
 	
-	var chartPerf = perf;
 	if (keyPerf == 'rank') {
+		var chartPerf = [];
 		for (var j=0; j<perf.length; ++j) {  // take every second element
 			chartPerf.push(perf[j][0]/perf[j][1]*100);
 		}
+		return [chartPerf, perf];
+	} else {
+		return [perf];
 	}
-	
-	return chartPerf;
 }
 
 function getPerfUnits(keyPerf) {

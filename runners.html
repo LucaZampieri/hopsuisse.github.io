@@ -20,7 +20,6 @@ feel lucky !</a></h3>
 </div>
 
 <script type="text/javascript">
-	
 	var myMap = null;
 	var runners = [
 		{value:"Bosshart Catherine 1948",data:"bosshartcatherine1948"},
@@ -30,6 +29,7 @@ feel lucky !</a></h3>
 		{value:"M\u00fcller Gu\u00e9nael 1998", data:"mullerguenael1998"}
 	];
 	var currentRunner = null;
+	var allRacesObject = {};
 </script>
 
 <script type="text/javascript">
@@ -292,131 +292,102 @@ function fillPerformanceSelect() {
 	drawPerformance('speed');
 }
 
+
 // ----------------- PERFORMANCE GRAPHS ---------------------- //
-
-
 
 /* --- Draws performance chart, given a performance key --- */
 function drawPerformance(keyPerf) {
 	// get the names of all races of currentRunner
-	var raceKeys = Object.keys(currentRunner.races);
+	var raceKeys = Object.keys(allRacesObject);
 	
 	// get the selected race, or the first one if not specified (not 
 	// specified = currentRunner has only participated to one race)
 	var selectedRace = $('#race').val();
 	if (!selectedRace || selectedRace == ' ') {
-		selectedRace = raceKeys[0];
+		raceKeys = [raceKeys[0]];
+	} else if (selectedRace != 'all') {
+		raceKeys = [selectedRace];
 	}
-	
-	var chart = null;
-	if (selectedRace == 'all') {
-		// create the chart only with the first race
-		var keyRace1 = raceKeys[0];
-		createPerfChart(keyRace1, keyPerf, chart, true);
-		// then complete the chart with the other races (so the iterator
-		// begins at 1 and not at 0
-		for (var i=1; i<raceKeys.length; i++) {
-			updatePerfChart(raceKeys[i], keyPerf, chart);
-		} 
-	} else {
-		// If a specific race is proposed, create the chart only with 
-		// this race
-		createPerfChart(selectedRace, keyPerf, chart, false);
-	}
+		
+	createPerfChart(raceKeys, keyPerf);
 }
 
 /* --- Creates the performance chart from scratch --- */
-function createPerfChart(keyRace, keyPerf, chart, willBeUpdated) {
-	// Find the chosen race date
-	var allDates = Object.keys(currentRunner.races[keyRace].date);
-	
-	// Retreive the encoded name of the json file corresponding to the 
-	// chosen race
-	var encodedName = encodeName(keyRace);
-	
-	// Read the corresponding json file
-	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
-		var currentRace = data;
-		var chartPerf = getAllPerformances(keyPerf, allDates, currentRace);
-		var units = getPerfUnits(keyPerf);
+function createPerfChart(raceKeys, keyPerf) {
+	var chartPerf = [];
+	for (var l=0; l<raceKeys.length; l++){
+		var allDates = Object.keys(currentRunner.races[raceKeys[l]].date);
+		var currentRace = allRacesObject[raceKeys[l]];
+		chartPerf.push(getAllPerformances(keyPerf, allDates, currentRace));
+	}
+	chartPerf = [].concat.apply([], chartPerf);
+	var units = getPerfUnits(keyPerf);
 		
-		if (chartPerf.length > 1 || willBeUpdated) { // Draw chart and write mean statistics
-			chart = c3.generate({
-				bindto: '#performance .chart',
-				data: {
-					columns: [
-						[keyPerf].concat(chartPerf)
-					]
-				}
-			});
-			
-			/* ..... works only if there is only one race..... */ // -----------------------> TODO
-			/* var sumPerf = chartPerf.reduce(function(a, b) { return a+b; });
-			var avgPerf = sumPerf/chartPerf.length;
-			var meanPerfStr = "";
-			var maxPerfStr = "";
-			var minPerfStr = "";
-			if (keyPerf != 'rank') {
-				var maxPerf = chartPerf.reduce(function(a, b) { Math.max(a, b) });
-				var minPerf = chartPerf.reduce(function(a, b) { Math.min(a, b) });
-				meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf + " " + units + "<br>";
-				maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
-				minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
-			} else { // case 'rank'
-				var maxId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
-				var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
-				var maxPerf = perf[2*maxId];
-				var minPerf = perf[2*minId];
-				meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
-					+ "% of the runners.<br>";
-				maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + perf[2*maxId+1] + " runners.<br>";
-				minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + perf[2*minId+1] + " runners.";
-			}
-			
-			var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
-			$(description).replaceAll('#performance .text') */
-			
-		} else { // Only write the performance
-			$("<div class='chart'></div>").replaceAll('#performance .chart');
-			if ($("#perf")){
-				$('#perf').remove(); 
-			}
-			perf = [];
-			perf.push(getPerformance(currentRace, allDates[0], 'distance'));
-			perf.push(getPerformance(currentRace, allDates[0], 'pace'));
-			perf.push(getPerformance(currentRace, allDates[0], 'rank'));
-			perf.push(getPerformance(currentRace, allDates[0], 'speed'));
-			
-			var perfSpeed = "<u>Speed</u>: " + perf[0] + " km/h<br>";
-			var perfPace = "<u>Pace</u>: " + perf[1] + " min/km<br>";
-			var perfRank = "<u>Rank</u>: " + perf[2] + " out of " + perf[3] + " runners.<br>";
-			var perfDistance = "<u>Distance</u>: " + perf[4] + " km";
-			var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
-			$(description).replaceAll('#performance .text')
-		}
-	})
-}
-
-/* --- Updates an already existing performance chart --- */
-function updatePerfChart(keyRace, keyPerf, chart) {
-	var allDates = Object.keys(currentRunner.races[keyRace].date);
-	
-	// Retreive the encoded name of the json file corresponding to the 
-	// chosen race
-	var encodedName = encodeName(keyRace);
-	
-	// Read the corresponding json file
-	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
-		var currentRace = data;
-		var chartPerf = getAllPerformances(keyPerf, allDates, currentRace);
-		var units = getPerfUnits(keyPerf);
-		
-		chart.load({
-			columns: [
+	if (chartPerf.length > 1) { // Draw chart and write mean statistics
+		var chart = c3.generate({
+			bindto: '#performance .chart',
+			data: {
+				columns: [
 					[keyPerf].concat(chartPerf)
-				] //, ???
+				]
+			}
 		});
-	})
+		
+		// Write mean performance
+		var sumPerf = chartPerf.reduce(function(a, b) { return a+b; });
+		var avgPerf = sumPerf/chartPerf.length;
+		var meanPerfStr = "";
+		var maxPerfStr = "";
+		var minPerfStr = "";
+		if (keyPerf != 'rank') {
+			var maxPerf = Math.max.apply(null, chartPerf);
+			var minPerf = Math.min.apply(null, chartPerf); 
+			if (keyPerf != 'distance') {
+				maxPerf = maxPerf.toFixed(2);
+				minPerf = minPerf.toFixed(2);
+			}
+			meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf.toFixed(2) + " " + units + "<br>";
+			maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
+			minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
+		} else { // case 'rank'
+			var maxId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+			var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+			var maxPerf = perf[maxId][0];
+			var minPerf = perf[minId][0];
+			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
+				+ "% of the runners.<br>";
+			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + perf[maxId][1] + " runners.<br>";
+			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + perf[minId][1] + " runners.";
+		}
+		
+		var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
+		$(description).replaceAll('#performance .text')
+			
+	} else { // Only write the performance
+		$("<div class='chart'></div>").replaceAll('#performance .chart');
+		if ($("#perf")){
+			$('#perf').remove(); 
+		}
+		
+		perf = [];
+		var selectedDate = $('#date').val();
+		if (!selectedDate || selectedDate == " ") {
+			selectedDate = allDates[0];
+		}
+		
+		var keyCat = Object.keys(currentRunner.races[raceKeys[0]].date[selectedDate].categories)[0];
+		perf.push(getPerformance(currentRace, selectedDate, 'distance', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'pace', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'rank', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'speed', keyCat));
+		
+		var perfSpeed = "<u>Distance</u>: " + perf[0] + " km<br>";
+		var perfPace = "<u>Pace</u>: " + perf[1].toFixed(2) + " min/km<br>";
+		var perfRank = "<u>Rank</u>: " + perf[2][0] + " out of " + perf[2][1] + " runners.<br>";
+		var perfDistance = "<u>Speed</u>: " + perf[3].toFixed(2) + " km/h";
+		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
+		$(description).replaceAll('#performance .text')
+	}
 }
 
 function getAllPerformances(keyPerf, allDates, currentRace) {
@@ -424,24 +395,36 @@ function getAllPerformances(keyPerf, allDates, currentRace) {
 	
 	var selectedDate = $('#date').val();
 	if (!selectedDate || selectedDate == " ") {
-		selectedDate = allDates[0];
+		if (allDates.length > 1) {
+			selectedDate = 'all';
+		} else {
+			selectedDate = allDates[0];
+		}
 	}
 	
+	var runnerDates = currentRunner.races[currentRace.name].date;
+		
 	// If all the dates are selected, get the performance of the 
 	// runner during all those dates, otherwise get the performance 
-	// of the runner only on the specified date
+	// of the runner only on the specified date	
 	if (selectedDate == 'all') {
-		for (var j=1; j<allDates.length; j++) {
-			perf.push(getPerformance(currentRace, allDates[j], keyPerf));
+		for (var j=0; j<allDates.length; j++) {
+			var allCategories = Object.keys(runnerDates[allDates[j]].categories);
+			for (var k=0; k<allCategories.length; k++) {
+				perf.push(getPerformance(currentRace, allDates[j], keyPerf, allCategories[k]));
+			}
 		}
 	} else {
-		perf.push(getPerformance(currentRace, selectedDate, keyPerf));
+		var allCategories = Object.keys(runnerDates[selectedDate].categories);
+		for (var k=0; k<allCategories.length; k++) {
+			perf.push(getPerformance(currentRace, selectedDate, keyPerf, allCategories[k]));
+		}
 	}
 	
 	var chartPerf = perf;
 	if (keyPerf == 'rank') {
-		for (var j=0; j<perf.length; j+=2) {  // take every second element
-			chartPerf.push(perf[j]/perf[j+1]*100);
+		for (var j=0; j<perf.length; ++j) {  // take every second element
+			chartPerf.push(perf[j][0]/perf[j][1]*100);
 		}
 	}
 	
@@ -466,191 +449,34 @@ function getPerfUnits(keyPerf) {
 	return units;
 }
 
-/* --- Get the performance of a runner at a specified date --- */
+/* --- Get the performance of a runner at a specified date, for a specified category --- */
 // Args: date (Object file), keyPerf (string)
-function getPerformance(currentRace, keyDate, keyPerf) {
-	var perf = [];
+function getPerformance(currentRace, keyDate, keyPerf, keyCat) {
+	var perf = null;
 	var runnerDate = currentRunner.races[currentRace.name].date[keyDate];
-	var allCategories = Object.keys(runnerDate.categories);
+	var interest = runnerDate.categories[keyCat];
 	
-	for (var k=1; k<allCategories.length; k++) {
-		var interest = runnerDate.categories[allCategories[k]];
-		switch (keyPerf) {
-			case 'distance': // units: km
-				perf.push(interest.distance);
-				break;
-			case 'pace': // units: min/km
-				perf.push(interest.time/(interest.distance*60)); 
-				break;
-			case 'rank': // perf[2*n] = rank, perf[2*n+1] = total 
-						 //number of runners in this race-date-category
-				perf.push(interest.rank);
-				perf.push(currentRace.dates[keyDate].categories[allCategories[k]].count);
-				break;
-			default: //'speed', units: km/h
-				perf.push(interest.distance/interest.time*3600);
-				break;
-		}
+	switch (keyPerf) {
+		case 'distance': // units: km
+			perf = interest.distance;
+			break;
+		case 'pace': // units: min/km
+			perf = interest.time/(interest.distance*60); 
+			break;
+		case 'rank': // perf[2*n] = rank, perf[2*n+1] = total 
+					 //number of runners in this race-date-category
+			perf = [];
+			perf.push(interest.rank);
+			perf.push(currentRace.dates[keyDate].categories[keyCat].count);
+			break;
+		default: //'speed', units: km/h
+			perf = interest.distance/interest.time*3600;
+			break;
 	}
-	
 	return perf;
 }
 
-
-
-
-/*
-function getRunnerInfos() {
-	var speed = [];
-	var pace = [];
-	var rank = [];
-	var distance = [];
-	var totRunners = [];
-	var normalizedRank = [];
-	var selectedRace = $('#race').val();
-	if (!selectedRace || selectedRace == ' ') {
-		selectedRace = Object.keys(currentRunner.races)[0];
-	}
-
-	if (selectedRace == 'all') {
-		for (var keyRace in currentRunner.races) {
-			for (var keyDate in currentRunner.races[keyRace].date) {
-				for (var keyCat in currentRunner.races[keyRace].date[keyDate].categories) {
-					var interest = currentRunner.races[keyRace].date[keyDate].categories[keyCat];
-					//getTotalNumberOfRunners(keyRace, keyDate, keyCat, function(tot) {
-					//		totRunners.push(tot)
-					//		normalizedRank.push(interest.rank/tot*100)
-					//	});
-					speed.push(interest.distance/interest.time*3600)
-					pace.push(interest.time/(interest.distance*60))
-					rank.push(interest.rank)
-					distance.push(interest.distance)
-				}
-			}
-		}
-	} else {
-		var selectedDate = $('#date').val();
-		if (!selectedDate || selectedDate == " ") {
-			selectedDate = 'all';
-		}
-		if (selectedDate == 'all') {
-			for (var keyDate in currentRunner.races[selectedRace].date) {
-				for (var keyCat in currentRunner.races[selectedRace].date[keyDate].categories) {
-					var interest = currentRunner.races[selectedRace].date[keyDate].categories[keyCat];
-					// getTotalNumberOfRunners(selectedRace, keyDate, keyCat, function(tot) {
-					//		totRunners.push(tot)
-					//		normalizedRank.push(interest.rank/tot*100)
-					//	}); 
-					speed.push(interest.distance/interest.time*3600)
-					pace.push(interest.time/(interest.distance*60))
-					rank.push(interest.rank)
-					distance.push(interest.distance)
-				}
-			}
-		} else {
-			for (var keyCat in currentRunner.races[selectedRace].date[selectedDate].categories) {
-					var interest = currentRunner.races[selectedRace].date[selectedDate].categories[keyCat];
-					// var tot = getTotalNumberOfRunners(selectedRace, selectedDate, keyCat, function(tot) {
-					//		totRunners.push(tot)
-					//		normalizedRank.push(interest.rank/tot*100)
-					//	}); 
-					speed.push(interest.distance/interest.time*3600)
-					pace.push(interest.time/(interest.distance*60))
-					rank.push(interest.rank)
-					distance.push(interest.distance)
-				}
-		}
-	}
-	return [distance, pace, rank, speed, totRunners, normalizedRank];
-} */
-
-/*function getTotalNumberOfRunners(keyRace, raceDate, raceCat, callback) {
-	var encodedName = encodeName(keyRace);
-ge		callback(data.dates[raceDate].categories[raceCat].count);
-	})
-}*/
-
-/*
-function drawPerformance(keyPerf) {
-	var infos = getRunnerInfos();
-
-	if (infos[0].length > 1) {
-		
-		var perfId = 0;
-		var units = "";
-		switch (keyPerf) {
-			case 'distance':
-				perfId = 0;
-				units = 'km';
-				break;
-			case 'pace':
-				perfId = 1;
-				units = 'min/km';
-				break;
-			case 'rank':
-				perfId = 5;
-				break;
-			default: //'speed'
-				perfId = 3;
-				units = 'km/h';
-				break;
-		}
-		var chart = c3.generate({
-			bindto: '#performance .chart',
-			data: {
-				columns: [
-					[keyPerf].concat(infos[perfId])
-				]
-			}
-		});
-		
-		var sumPerf = infos[perfId].reduce(function(a, b) { return a + b; });
-		var avgPerf = sumPerf / infos[perfId].length;
-		var meanPerfStr = "";
-		var maxPerfStr = "";
-		var minPerfStr = "";
-		if (keyPerf != 'rank') {
-			var maxPerf = infos[perfId].reduce(function(a, b) {
-				if (a>b) return a;
-				else return b;
-			});
-			var minPerf = infos[perfId].reduce(function(a, b) {
-				if (a>b) return b;
-				else return a;
-			});
-			meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf + " " + units + "<br>";
-			maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
-			minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
-		} else { //Case rank
-			var totRunners = infos[4];
-			var rank = infos[2];
-			var maxId = infos[perfId].indexOf(Math.min.apply(null, infos[perfId]));
-			var minId = infos[perfId].indexOf(Math.max.apply(null, infos[perfId]));
-			var maxPerf = rank[maxId];
-			var minPerf = rank[minId];
-			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
-				+ "% of the runners.<br>";
-			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + totRunners[maxId] + " runners.<br>";
-			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + totRunners[minId] + " runners.";
-		}
-		var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
-		$(description).replaceAll('#performance .text')
-
-	} else {
-
-		$("<div class='chart'></div>").replaceAll('#performance .chart');
-		if ($("#perf")){
-			$('#perf').remove(); 
-		}
-		var perfSpeed = "<u>Speed</u>: " + infos[3][0] + " km/h<br>";
-		var perfPace = "<u>Pace</u>: " + infos[1][0] + " min/km<br>";
-		var perfRank = "<u>Rank</u>: " + infos[2][0] + " out of " + infos[4][0] + " runners.<br>";
-		var perfDistance = "<u>Distance</u>: " + infos[0][0] + " km";
-		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
-		$(description).replaceAll('#performance .text')
-
-	}
-} */
+// ---------------------------------------------------------------------
 
 function selectOnlyThis(elem,id) {
 	for (var i = 1;i <= 4; i++)
@@ -661,50 +487,116 @@ function selectOnlyThis(elem,id) {
 }
 
 function loadAndDisplay(encodedName) {
+	allRacesObject = {};
+	
 	// Load JSON data
 	$.getJSON("../runnerdata/" + encodedName + ".json", function(data) {
 		console.log(data)
-
 		// Set 'global' var to selected race
 		currentRunner = data
+		
+		var racesLeft = Object.keys(currentRunner.races);
+		loadRaceJSONAndDisplay(racesLeft);
+	})
+}
 
-		// Empty HTML
-		$('#outputbox').empty()
-		
-		// Title + personal information
-		var today = new Date();
-		var year = today.getFullYear();
-		var sex = 'homme';
-		var pronom = "He";
-		if (currentRunner.sex == 'F') {
-			sex = 'femme';
-			pronom = 'She';
+function loadRaceJSONAndDisplay(racesLeft) {
+	var lastRace = racesLeft[racesLeft.length-1];
+	var encodedName = encodeName(lastRace);
+	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
+		if (!allRacesObject[lastRace]) {
+			allRacesObject[lastRace] = [];
 		}
-		var title = "<h2>"+ currentRunner.name +" <small>"
-			+ (year - currentRunner.birth) +" ans, "+ sex 
-			+".</small></h2>";
-		$('#outputbox').append(title);
-							
-		$('#outputbox').append("<div id='globaldesc'></div>")
-		$('#globaldesc').append("<div id='map'></div>")
+		allRacesObject[lastRace] = data;
+		racesLeft.pop();
+		if (racesLeft.length == 0) {
+			display();
+		} else {
+			loadRaceJSONAndDisplay(racesLeft);
+		}
+	}); 
+}
+
+function display() {
+	console.log(allRacesObject)
+	// Empty HTML
+	$('#outputbox').empty()
+	
+	// Title + personal information
+	var today = new Date();
+	var year = today.getFullYear();
+	var sex = 'homme';
+	var pronom = "He";
+	if (currentRunner.sex == 'F') {
+		sex = 'femme';
+		pronom = 'She';
+	}
+	var title = "<h2>"+ currentRunner.name +" <small>"
+		+ (year - currentRunner.birth) +" ans, "+ sex 
+		+".</small></h2>";
+	$('#outputbox').append(title);
+						
+	$('#outputbox').append("<div id='globaldesc'></div>")
+	$('#globaldesc').append("<div id='map'></div>")
+	
+	// Create select menu for races, if > 1
+	if (Object.keys(currentRunner.races).length > 1) {
 		
-		// Create select menu for races, if > 1
-		if (Object.keys(data.races).length > 1) {
-			
-			$('#globaldesc').append("<div class='text'></div>")
+		$('#globaldesc').append("<div class='text'></div>")
+		var raceNoSelect = 
+			"<p>This runner has participated to <b>" + Object.keys(currentRunner.races).length
+			+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
+		$('#globaldesc .text').append(raceNoSelect);
+		
+		$('#outputbox').append("<div id='selects'></div>")
+		// Race select menu
+		var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
+		$('#selects').append(raceSelect)
+		fillRaceSelect(currentRunner.races)
+		$('#selects').append("<div class='text'></div>")
+		
+		// Display performance + perf select menu
+		$('#outputbox').append("<div id='performance'></div>")
+		$('#performance').append("<h3> Performances:</h3>")
+		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+		$('#performance').append(performanceSelect)
+		$('#performance').append("<div class='chart'></div>")
+		$('#performance').append("<div class='text'></div>")
+		fillPerformanceSelect();
+
+	} else {
+		
+		$('#globaldesc').append("<div class='text'></div>")
+		var keyRace = Object.keys(currentRunner.races)[0];
+		drawFullMap();
+		
+		var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(keyRace);
+
+		// Create select menu for dates, if > 1
+		var selectedRace = Object.keys(currentRunner.races)[0];
+		
+		if (Object.keys(currentRunner.races[selectedRace].date).length > 1) {
+
+			var nbParticipation = Object.keys(currentRunner.races[selectedRace].date).length;
 			var raceNoSelect = 
-				"<p>This runner has participated to <b>" + Object.keys(data.races).length
-				+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
+				"<p>This runner has participated to only one competition: <b>" 
+				+ keyRace + "</b>.<br> " + pronom + " has participated to it <b>"
+				+ nbParticipation + " times</b>.</p>";
 			$('#globaldesc .text').append(raceNoSelect);
-			
+							
 			$('#outputbox').append("<div id='selects'></div>")
-			// Race select menu
-			var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
-			$('#selects').append(raceSelect)
-			fillRaceSelect(data.races)
 			$('#selects').append("<div class='text'></div>")
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
 			
-			// Display performance + perf select menu
+			// Date menu select
+			var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
+				+ "<select id='date' onchange='dateChanged();'></select></p>"
+			$('#selects').append(chooseDate)
+			fillDateSelect(currentRunner.races[selectedRace].date)
+			
 			$('#outputbox').append("<div id='performance'></div>")
 			$('#performance').append("<h3> Performances:</h3>")
 			var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
@@ -712,77 +604,35 @@ function loadAndDisplay(encodedName) {
 			$('#performance').append("<div class='chart'></div>")
 			$('#performance').append("<div class='text'></div>")
 			fillPerformanceSelect();
-
+			
 		} else {
+
+			var mDate = currentRunner.races[selectedRace].date;
+			var dateId = Object.keys(mDate)[0];
+			var raceNoSelect = 
+				"<p>This runner has participated to only one competition: <b>" 
+				+ Object.keys(currentRunner.races)[0] + "</b>. <br>Run date: <b>" 
+				+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
+				+ mDate[dateId].year + "</b>.</p>";
+			$('#globaldesc .text').append(raceNoSelect)
 			
-			$('#globaldesc').append("<div class='text'></div>")
-			var keyRace = Object.keys(data.races)[0];
-			drawFullMap();
+			$('#outputbox').append("<div id='selects'></div>")
+			$('#selects').append("<div class='text'></div>")
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
 			
-			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(keyRace);
+			$('#outputbox').append("<div id='performance'></div>")
+			$('#performance').append("<h3> Performances:</h3>")
+			$('#performance').append("<div class='chart'></div>")
+			$('#performance').append("<div class='text'></div>")
+			drawPerformance('speed')
 
-			// Create select menu for dates, if > 1
-			var selectedRace = Object.keys(data.races)[0];
-			
-			if (Object.keys(data.races[selectedRace].date).length > 1) {
-
-				var nbParticipation = Object.keys(data.races[selectedRace].date).length;
-				var raceNoSelect = 
-					"<p>This runner has participated to only one competition: <b>" 
-					+ keyRace + "</b>.<br> " + pronom + " has participated to it <b>"
-					+ nbParticipation + " times</b>.</p>";
-				$('#globaldesc .text').append(raceNoSelect);
-								
-				$('#outputbox').append("<div id='selects'></div>")
-				$('#selects').append("<div class='text'></div>")
-				var statRace = 
-					"<p id='statRace'>For more general statistics about this race, click <a href=" 
-					+ mLink + ">here</a>.</p>"
-				$('#selects .text').append(statRace);
-				
-				// Date menu select
-				var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
-					+ "<select id='date' onchange='dateChanged();'></select></p>"
-				$('#selects').append(chooseDate)
-				fillDateSelect(currentRunner.races[selectedRace].date)
-				
-				$('#outputbox').append("<div id='performance'></div>")
-				$('#performance').append("<h3> Performances:</h3>")
-				var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
-				$('#performance').append(performanceSelect)
-				$('#performance').append("<div class='chart'></div>")
-				$('#performance').append("<div class='text'></div>")
-				fillPerformanceSelect();
-				
-			} else {
-
-				var mDate = currentRunner.races[selectedRace].date;
-				var dateId = Object.keys(mDate)[0];
-				var raceNoSelect = 
-					"<p>This runner has participated to only one competition: <b>" 
-					+ Object.keys(data.races)[0] + "</b>. <br>Run date: <b>" 
-					+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
-					+ mDate[dateId].year + "</b>.</p>";
-				$('#globaldesc .text').append(raceNoSelect)
-				
-				$('#outputbox').append("<div id='selects'></div>")
-				$('#selects').append("<div class='text'></div>")
-				var statRace = 
-					"<p id='statRace'>For more general statistics about this race, click <a href=" 
-					+ mLink + ">here</a>.</p>"
-				$('#selects .text').append(statRace);
-				
-				$('#outputbox').append("<div id='performance'></div>")
-				$('#performance').append("<h3> Performances:</h3>")
-				$('#performance').append("<div class='chart'></div>")
-				$('#performance').append("<div class='text'></div>")
-				drawPerformance('speed')
-
-			}
 		}
-		
-	})
+	}
 }
+
 
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for race selection through search bar */

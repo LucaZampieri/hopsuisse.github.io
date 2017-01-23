@@ -338,19 +338,13 @@ function createPerfChart(raceKeys, keyPerf) {
 		var chart = c3.generate({
 			bindto: '#performance .chart',
 			data: {
-				columns: [
-					[keyPerf].concat(chartPerf)
-				]
+				columns: [ [keyPerf].concat(chartPerf) ]
 			},
-			legend: {
-				show: false
-			},
+			legend: { show: false },
 			axis: {
 				x: {
 					type: 'category',
-					label: { 
-						show: false 
-					},
+					label: { show: false },
 					tick: {
 						format: function(i) {
 							return fullRacesDesc[i];
@@ -365,7 +359,7 @@ function createPerfChart(raceKeys, keyPerf) {
 				}
 			},
 			onrendered: function() {
-				// HOTFIX for ticks position...
+				// hotfix for ticks position
 				$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(0,-20)')
 			}
 		});
@@ -402,7 +396,6 @@ function createPerfChart(raceKeys, keyPerf) {
 			
 	} else { // Only write the performance
 		
-		$("<div class='chart'></div>").replaceAll('#performance .chart');
 		if ($("#perf")){
 			$('#perf').remove(); 
 		}
@@ -425,6 +418,9 @@ function createPerfChart(raceKeys, keyPerf) {
 		var perfDistance = "<u>Speed</u>: " + perf[3].toFixed(2) + " km/h";
 		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
 		$(description).replaceAll('#performance .text')
+		
+		drawTimeHistogram(raceKeys[0], perf[0]/perf[3]*3600)
+		//$("<div class='chart'></div>").replaceAll('#performance .chart');
 		
 	}
 }
@@ -555,6 +551,124 @@ function getPerformance(currentRace, keyDate, keyPerf, keyCat) {
 	return perf;
 }
 
+/* Draw histogram for times for the current race, date & distance selection */
+function drawTimeHistogram(raceKey, onesTime) {
+	// Get selected date and distance
+	var mDate = $('#date').val();
+	if (!mDate || mDate == " ") {
+		mDate = Object.keys(currentRunner.races[raceKey].date)[0];
+	}
+	var mCategory = Object.keys(currentRunner.races[raceKey].date[mDate].categories)[0];
+	
+	// Get current race
+	var currentRace = allRacesObject[raceKey];
+	
+	// Get times for this choice
+	var times = getTimes(raceKey, mDate, mCategory);
+  
+	// Create bins and counts
+	var numBins = 10;
+	allTimes = [];
+	for (let key of Object.keys(times)) {
+		allTimes = allTimes.concat(times[key]);
+	}
+	var bins = linspace(allTimes, numBins, true);
+	var counts = [];
+	var mCounts;
+	for (let key of Object.keys(times)) {
+		mCounts = valueCounts(times[key], bins, true);
+		// Build string date
+		dateAttr = currentRace.dates[key];
+		strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year;
+		mCounts.unshift(strDate);
+		counts.push(mCounts);
+	}
+	
+	// Get bin number corresponding to the current runner's performance.
+	var perso = getBinNumber(onesTime, bins);
+
+	// Make bin ticks
+	binTicks = makeBinTicks(bins);
+	// Draw chart
+	var chart = c3.generate({
+		bindto: '#performance .chart',
+		data: {
+		  columns: counts,
+		  type: 'spline',
+		},
+		point: {
+			show: false,
+		},
+		axis: {
+			x: {
+				label: {text:'Time',position:'outer-center'},
+				type: 'category',
+				categories: binTicks,
+				tick: {
+					format: function(i) {
+						return secondsToTime(binTicks[i].split(' - ')[0])
+					}
+				}
+			},
+			y: {
+				label: 'Number of runners'
+			}
+		},
+		grid: {
+			x: {
+				lines: [{value: binTicks[perso], text: currentRunner.name}]
+			}
+		},
+		tooltip: {
+			show: false,
+			grouped: true,
+			format: {
+				title: function(i) {
+					var left = binTicks[i].split(' - ')[0]
+					var right = binTicks[i].split(' - ')[1]
+					return secondsToTime(left) + ' - ' + secondsToTime(right) 
+				},
+			}
+		}, 
+		transition: {
+			duration: 0
+		},
+		onrendered: function() {
+			// HOTFIX for ticks position...
+			$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+		}
+	})
+}
+
+function getBinNumber(onesTime, bins) {
+	for (var j = 0; j < bins.length - 2; j++) {
+		if (onesTime >= bins[j] && onesTime < bins[j+1]) {
+			return j;
+		}
+	}
+	// to include last bound
+	if (onesTime >= bins[bins.length-2] && onesTime <= bins[bins.length-1]) {
+		return bins.length-2;
+	}
+	return -1;
+}
+
+/* Get times for current race given date and category
+ *
+ * Params :
+ *  - keyRace : string race
+ *  - raceDate : string date or 'all'
+ *  - raceCategory : string distance
+ * Returns :
+ *  - times : dictionary with string dates as keys and int arrays as values
+ */
+function getTimes(keyRace, raceDate, raceCategory) {
+	var currentRace = allRacesObject[keyRace];
+	var times = {};
+	times[raceDate] = currentRace.dates[raceDate].categories[raceCategory].times;
+	return times;
+}
+
 // ---------------------------------------------------------------------
 
 function selectOnlyThis(elem,id) {
@@ -639,8 +753,8 @@ function display() {
 		$('#performance').append("<h3> Performances:</h3>")
 		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
 		$('#performance').append(performanceSelect)
-		$('#performance').append("<div class='chart'></div>")
 		$('#performance').append("<div class='text'></div>")
+		$('#performance').append("<div class='chart'></div>")
 		fillPerformanceSelect();
 
 	} else {
@@ -680,8 +794,8 @@ function display() {
 			$('#performance').append("<h3> Performances:</h3>")
 			var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
 			$('#performance').append(performanceSelect)
-			$('#performance').append("<div class='chart'></div>")
 			$('#performance').append("<div class='text'></div>")
+			$('#performance').append("<div class='chart'></div>")
 			fillPerformanceSelect();
 			
 		} else {
@@ -704,8 +818,8 @@ function display() {
 			
 			$('#outputbox').append("<div id='performance'></div>")
 			$('#performance').append("<h3> Performances:</h3>")
-			$('#performance').append("<div class='chart'></div>")
 			$('#performance').append("<div class='text'></div>")
+			$('#performance').append("<div class='chart'></div>")
 			drawPerformance('speed')
 
 		}

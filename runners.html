@@ -325,17 +325,48 @@ function createPerfChart(raceKeys, keyPerf) {
 		}
 		chartPerf.push(tempPartPerf[0]);
 	}
-	console.log(generalPerf)
 	chartPerf = [].concat.apply([], chartPerf);
 	var units = getPerfUnits(keyPerf);
 			
 	if (chartPerf.length > 1) { // Draw chart and write mean statistics
+		
+		var mLabel = keyPerf+" ["+units+"]";
+		if (keyPerf == 'rank') {
+			mLabel = "normalized ranking [%]";
+		}
+		var fullRacesDesc = getTicksList(raceKeys);
 		var chart = c3.generate({
 			bindto: '#performance .chart',
 			data: {
 				columns: [
 					[keyPerf].concat(chartPerf)
 				]
+			},
+			legend: {
+				show: false
+			},
+			axis: {
+				x: {
+					type: 'category',
+					label: { 
+						show: false 
+					},
+					tick: {
+						format: function(i) {
+							return fullRacesDesc[i];
+						}
+					}
+				},
+				y: {
+					label: mLabel,
+					tick: {
+						format: d3.format(getPerfPrecision(keyPerf))
+					}
+				}
+			},
+			onrendered: function() {
+				// HOTFIX for ticks position...
+				$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(0,-20)')
 			}
 		});
 		
@@ -360,7 +391,7 @@ function createPerfChart(raceKeys, keyPerf) {
 			var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
 			var maxPerf = generalPerf[maxId][0];
 			var minPerf = generalPerf[minId][0];
-			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf 
+			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf.toFixed(2) 
 				+ "% of the runners.<br>";
 			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + generalPerf[maxId][1] + " runners.<br>";
 			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + generalPerf[minId][1] + " runners.";
@@ -370,6 +401,7 @@ function createPerfChart(raceKeys, keyPerf) {
 		$(description).replaceAll('#performance .text')
 			
 	} else { // Only write the performance
+		
 		$("<div class='chart'></div>").replaceAll('#performance .chart');
 		if ($("#perf")){
 			$('#perf').remove(); 
@@ -393,7 +425,28 @@ function createPerfChart(raceKeys, keyPerf) {
 		var perfDistance = "<u>Speed</u>: " + perf[3].toFixed(2) + " km/h";
 		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
 		$(description).replaceAll('#performance .text')
+		
 	}
+}
+
+function getTicksList(raceKeys) {
+	var mainList = [];
+	for (var l=0; l<raceKeys.length; l++){
+		var descDates = currentRunner.races[raceKeys[l]].date;
+		var chosenDate = $('#date').val();
+		if (!chosenDate || chosenDate == " " || chosenDate == 'all') {
+			chosenDate = Object.keys(descDates);
+		} else {
+			chosenDate = [chosenDate];
+		}
+		for (var k=0; k<chosenDate.length; k++) {
+			var chosenCat = Object.keys(descDates[chosenDate[k]].categories);
+			for (var m=0; m<chosenCat.length; m++) {
+				mainList.push(raceKeys[l]+", "+descDates[chosenDate[k]].year+", "+chosenCat[m]);
+			}
+		}
+	}
+	return mainList;
 }
 
 function getAllPerformances(keyPerf, allDates, currentRace) {
@@ -454,6 +507,25 @@ function getPerfUnits(keyPerf) {
 			break;
 	}
 	return units;
+}
+
+function getPerfPrecision(keyPerf) {
+	var precision = '';
+	switch (keyPerf) {
+		case 'distance':
+			precision = 's';
+			break;
+		case 'pace': 
+			precision = '.3s';
+			break;
+		case 'rank': 
+			precision = 's';
+			break;
+		default: // 'speed'
+			precision = '.4s';
+			break;
+	}
+	return precision;
 }
 
 /* --- Get the performance of a runner at a specified date, for a specified category --- */

@@ -2,7 +2,7 @@
 .site-header {
   border-top: 5px solid #da291c;
 }
-a {
+a, a:visited {
   color: #da291c;
 }
 
@@ -11,10 +11,6 @@ a {
   text-align: center;
   font-size: x-large;
 }
-.home h1 .emoji {
-  width: 50px;
-  height: 50px;
-}
 .home h1 {
   color: gray;
 }
@@ -22,7 +18,25 @@ a {
   color: #da291c;
 }
 
+.home-nav {
+  display: inline-block;
+  background-color: #f1f1f1;
+  height: 100px;
+  max-width: 200px;
+  margin-top: 10px;
+  padding: 8px;
+  padding-top: 40px;
+  border-radius: 4px;
+}
+.home-nav:hover {
+  background-color: #e1e1e1;
+  text-decoration: none;
+}
+
 /* AUTOCOMPLETE STYLE */
+#randomlink {
+  cursor: pointer;
+}
 .autocomplete-suggestions {
   border: 1px solid #999;
   background: #fff;
@@ -77,5 +91,99 @@ a {
 /* OUTPUT STYLE */
 #outputbox div {
   margin-top: 20px;
-  margin-bottom: 10px;
+  /*margin-bottom: 10px;*/
+}
+
+#globaldesc .text {
+  display: inline-block;
+  vertical-align: top;
+  width: 35%;
+}
+div#map {
+  display: inline-block;
+  width: 65%;
+  height: 250px;
+}
+
+#weather {
+  display: inline-block;
+  vertical-align: top;
+  width: 40%;
+}
+#gender {
+  display: inline-block;
+  width: 50%;
+  height: 250px;
+}
+
+select#date, select#distance {
+  width: 30%;
+  height: 30px;
+  padding: 6px;
+  padding-left: 10px;
+  margin: 10px;
+  margin-left: 0;
+  font-size: medium;
+  font-family: 'Inconsolata', monospace;
+  color: #666666;
+  background: #f1f1f1 url('https://cdn3.iconfinder.com/data/icons/google-material-design-icons/48/ic_keyboard_arrow_down_48px-128.png') no-repeat;
+  background-size: 20px;
+  background-position:  right 10px center;
+  border:none;
+  outline:none;
+  display: inline-block;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+}
+
+.bigwi {
+  width: 100%;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 80px;
+  color: #d1d1d1;
+}
+
+/* CHARTS (GLOBAL) */
+.c3-grid .c3-ygrid {
+  stroke: #d7d7d7;
+  stroke-width: 2px;
+  stroke-dasharray: none;
+}
+
+path.c3-shape.c3-line.c3-line-count {
+  stroke-width: 3px;
+}
+
+g.tick {
+  font-size: small;
+}
+
+/* PARTICIPATION TRENDS CHART */
+#participation, #weather {
+  padding-top: 1px;
+  padding-left: 10px;
+  padding-right: 20px;
+  background-color: #f1f1f1;
+}
+
+#participation .chart .c3-axis-x .tick line {
+  stroke: #d7d7d7;
+  stroke-width: 2px;
+}
+#participation .chart .c3-axis-x .domain,
+#participation .chart .c3-axis-y .domain,
+#participation .chart .c3-axis-y .tick line {
+  opacity: 0;
+}
+
+#details {
+  margin-top: 50px;
+}
+
+#gender {
+  padding-top: 1px;
+  padding-left: 10px;
+  text-align: center;
 }

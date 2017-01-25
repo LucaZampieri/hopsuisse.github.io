@@ -5,7 +5,8 @@ permalink: /races/
 ---
 
 <div id="searchfield">
-  <h3>Search for a race :</h3>
+  <h3>Search for a race... <a id="randomlink" onclick="displayRandom();">or
+      feel lucky !</a></h3>
   <form>
     <input type="text" name="race" class="biginput" id="autocomplete"
     value="Type a location or a name here..." 
@@ -14,22 +15,39 @@ permalink: /races/
   </form>
 </div>
 
-<div id="map"></div>
 <div id="outputbox">
   <p id="outputcontent">Choose a race and the results will display here.</p>
 </div>
 
 
 <script type="text/javascript">
-  var myMap = null;
-  var races = [
-    {% for race in site.data.racesnames %}
-    {value:"{{race[1]}}",data:"{{race[0]}}"},
-    {% endfor %}
-  ];
-  var currentRace = null;
+// Query
+var url = window.location.href;
+var raceQuery = null;
+if (url.split("?").length > 1) {
+  raceQuery = url.split('?').pop().split('=').pop();
+}
+// Races hashtable
+var races = [
+  {% for race in site.data.racesnames %}
+  {value:"{{race[1]}}",data:"{{race[0]}}"},
+  {% endfor %}
+];
+// Initializations
+var currentRace = null;
+var myMap = null;
 </script>
+
 <script type="text/javascript">
+
+/* Display information for a randomly chosen race */
+function displayRandom() {
+  // Get random index
+  var entry = Math.floor(Math.random() * races.length);
+  // Load JSON file and display
+  loadAndDisplay(races[entry].data)
+}
+
 /* Draw a map centered on the race location if coordinates are known */
 function drawMap() {
   if (currentRace) {
@@ -37,31 +55,25 @@ function drawMap() {
     var latitude = currentRace.latitude
     var longitude = currentRace.longitude
 
-    // Display map
-    if (myMap == null) {
-      // First search : create the map
-      $("#map").height(250);
-      if (latitude!=null && longitude!=null) {
-        myMap = L.map('map').setView([latitude,longitude], 10);
-      }
+    if (latitude!=null && longitude!=null) {
+      myMap = L.map('map').setView([latitude,longitude], 10);
+
+      // Add actual layer
+      var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: 'abcd',
+        minZoom: 0,
+        maxZoom: 18,
+        ext: 'png'
+      }).addTo(myMap);
+      // Add marker
+      var marker = L.marker([latitude, longitude]).addTo(myMap);
     } else {
-      // Update the map
-      if (latitude!=null && longitude!=null) {
-        myMap.setView([latitude,longitude], 10);
-      } else {
-        $("#map").height(0);
-        myMap = null;
-      }
-    }
-    
-    // Add actual layer
-    var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      subdomains: 'abcd',
-      minZoom: 0,
-      maxZoom: 18,
-      ext: 'png'
-    }).addTo(myMap);
+      $('#map').empty()
+      $('#map').width(0)
+      $('#map').height(0)
+      $('#globaldesc .text').width('100%')
+    } 
   }
 }
 
@@ -98,6 +110,7 @@ function dateChanged() {
   
   // Update displayed info
   drawTimeHistogram()
+  displayWeather()
   drawGenderChart()
 }
 
@@ -208,7 +221,10 @@ function drawTimeHistogram() {
   var counts = []
   for (let key of Object.keys(times)) {
     var mCounts = valueCounts(times[key], bins, true)
-    mCounts.unshift(key)
+    // Build string date
+    dateAttr = currentRace.dates[key]
+    strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year
+    mCounts.unshift(strDate)
     counts.push(mCounts)
   }
 
@@ -217,18 +233,23 @@ function drawTimeHistogram() {
 
   // Draw chart
   var chart = c3.generate({
-    bindto: '#histchart',
+    bindto: '#times .chart',
     data: {
       columns: counts,
-      type: 'bar',
+      type: 'spline',
+    },
+    point: {
+      show: false
     },
     axis: {
       x: {
-        label: {text:'Time (seconds)',position:'outer-center'},
+        label: {text:'Time',position:'outer-center'},
         type: 'category',
         categories: binTicks,
         tick: {
-          format: function(i) { return binTicks[i].split(' - ')[0] }
+          format: function(i) {
+            return secondsToTime(binTicks[i].split(' - ')[0])
+          }
         }
       },
       y: {
@@ -236,9 +257,14 @@ function drawTimeHistogram() {
       }
     },
     tooltip: {
+      show: false,
       grouped: true,
       format: {
-        title: function(i) { return binTicks[i] + ' seconds' },
+        title: function(i) {
+          var left = binTicks[i].split(' - ')[0]
+          var right = binTicks[i].split(' - ')[1]
+          return secondsToTime(left) + ' - ' + secondsToTime(right) 
+        },
       }
     },
     transition: {
@@ -246,7 +272,7 @@ function drawTimeHistogram() {
     },
     onrendered: function() {
       // HOTFIX for ticks position...
-      $('#histchart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+      $('#times .chart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
     }
   })
 }
@@ -272,6 +298,7 @@ function getGenderCounts(raceDate, raceDistance) {
 function drawGenderChart() {
   // Get selected date and distance
   var mDate = $('#date').val();
+  var dateStr = $("#date option:selected").text();
   var mDistance = $('#distance').val()
 
   // Get gender counts for this choice
@@ -281,7 +308,7 @@ function drawGenderChart() {
 
   // Draw chart
   var chart = c3.generate({
-    bindto: '#genderchart',
+    bindto: '#gender .chart',
     data: {
       columns: [
         ['men', countMen],
@@ -290,8 +317,169 @@ function drawGenderChart() {
       type: 'donut'
     },
     donut: {
-      title: "Gender proportions"
+      title: dateStr +", "+ mDistance + 'km'
+    },
+  })
+}
+
+function drawParticipationChart() {
+  var dates = []
+  var counts = []
+  for (let key of Object.keys(currentRace.dates)) {
+    // Get count for this date
+    day = currentRace.dates[key].day
+    month = currentRace.dates[key].month
+    year = currentRace.dates[key].year
+    countMen = currentRace.dates[key].count_men
+    countWomen = currentRace.dates[key].count_women
+    counts.push(countMen + countWomen)
+    dates.push(day +'/'+ month +'/'+ year)
+  }
+  dates.unshift('x')
+  counts.unshift('count')
+  var chart = c3.generate({
+    bindto: '#participation .chart',
+    data: {
+      x: 'x',
+      xFormat: '%d/%m/%Y',
+      columns: [dates, counts],
+      colors: {count: '#be0023'}
+    },
+    axis: {
+      x: {
+        type: 'timeseries',
+        tick: {format: '%Y'}
+      }
+    },
+    grid: {
+      y: {show: true}
+    },
+    legend: { show: false },
+    onrendered: function() {
+      // HOTFIX for last tick position...
+      var xAxis = $('#participation .chart .c3-axis-x').first()
+      xAxis.children('.tick').last().children('text')
+          .attr('transform','translate(-10,0)')
     }
+  })
+}
+
+function displayWeather() {
+  // Get selected date
+  var mDate = $('#date').val();
+
+  // Get weather info for this date
+  var info = currentRace.dates[mDate]
+  if (mDate!='all' && info.weather) {
+    // display
+    var weather = '<i class="wi wi-horizon"></i> ' +
+      "<strong>On this day :</strong> " +
+      info.weather + "<br/>"
+    var minTemp = '<i class="wi wi-thermometer-internal"></i> ' +
+      "<strong>Min. temperature (°C) :</strong> " +
+      info.min_temp + "<br/>"
+    var maxTemp = '<i class="wi wi-thermometer-exterior"></i> ' +
+      "<strong>Max. temperature (°C) :</strong> " +
+      info.max_temp + "<br/>"
+    var weatherIcon = "<div class='bigwi'>" + 
+      getWeatherIcon(info.weather) + "</div>"
+    var weatherTitle = "<h4>Weather</h4>"
+    $('#weather .text').empty()
+    $('#weather .text').append(weatherTitle)
+    $('#weather .text').append(weather)
+    $('#weather .text').append(minTemp)
+    $('#weather .text').append(maxTemp)
+    $('#weather .text').append(weatherIcon)
+    $('#weather').css('width', '40%')
+    $('#weather').css('min-height', '380px')
+    $('#gender').width('50%')
+  } else {
+    // hide
+    $('#weather .text').empty()
+    $('#weather').width(0)
+    $('#weather').height(0)
+    $('#weather').css('min-height', '0px')
+    $('#gender').width('100%')
+  }
+}
+
+function loadAndDisplay(encodedName) {
+  // Load JSON data
+  $.getJSON("/racedata/" + encodedName + ".json", function(data) {
+    console.log(data)
+    
+    // Set 'global' var to selected race
+    currentRace = data
+
+    // Empty HTML
+    $('#outputbox').empty()
+
+    // ---- TITLE ----
+    var title = "<h2>"+ currentRace.name +"</h2>"
+    $('#outputbox').append(title)
+    
+    // ---- GLOBAL DESCRIPTION ----
+    $('#outputbox').append("<div id='globaldesc'></div>")
+    $('#globaldesc').append("<div class='text'></div>")
+    $('#globaldesc').append("<div id='map'></div>")
+    var numDates = Object.keys(currentRace.dates).length
+    var plural = numDates > 1 ? 's' : ''
+    var description =
+    '<p>Information about <em>'+ currentRace.name +
+    '</em> is available for '+ numDates +
+      ' edition'+plural+'.<br/><a href="http://www.google.com/search?q=' +
+      currentRace.name.replace(/ /g,'+') + '">Search about this on Google</a></p>'
+    $('#globaldesc .text').append(description)
+    drawMap()
+
+    // ---- PARTICIPATION TRENDS ----
+    if (Object.keys(currentRace.dates).length > 1) {
+      $('#outputbox').append("<div id='participation'></div>")
+      $('#participation').append("<div class='text'></div>")
+      $('#participation').append("<div class='chart'></div>")
+      var partTitle = "<h4>Participation trends</h4>"
+      var partText = "<p>Number of participants to the race, per year.</p>"
+      $('#participation .text').append(partTitle)
+      $('#participation .text').append(partText)
+      drawParticipationChart()
+    }
+
+    // ---- DETAILS ----
+    var details = "<h3 id='details'>Details</h3>"
+    $('#outputbox').append(details)
+
+    // Create select menu for dates
+    var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
+    $('#outputbox').append(dateSelect)
+    var sortedDates = fillDateSelect(data.dates)
+    
+    // Create select menu for distances
+    var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
+    $('#outputbox').append(distanceSelect)
+    var sortedDistances = fillDistanceSelect(getDistancesAllYears())
+    
+    // ---- WEATHER AND GENDER ----
+    $('#outputbox').append("<div id='weathergender'></div>")
+    $('#weathergender').append("<div id='weather'></div>")
+    $('#weathergender').append("<div id='gender'></div>")
+    $('#weather').append("<div class='text'></div>")
+    $('#gender').append("<div class='text'></div>")
+    var genderTitle = "<h4>Gender ratio</h4>"
+    $('#gender .text').append(genderTitle)
+    $('#gender').append("<div class='chart'></div>")
+    displayWeather()
+    drawGenderChart()
+
+    // ---- TIMES ----
+    $('#outputbox').append("<div id='times'></div>")
+    $('#times').append("<div class='text'></div>")
+    $('#times').append("<div class='chart'></div>")
+    var timesTitle = "<h4>Times distribution</h4>"
+    var timesText = "<p>Distribution of achieved times for this race, date and distance selection.</p>"
+    $('#times .text').append(timesTitle)
+    $('#times .text').append(timesText)
+    drawTimeHistogram()
+    
   })
 }
 
@@ -300,41 +488,14 @@ $(function(){
   $('#autocomplete').autocomplete({
     lookup: races,
     onSelect: function (suggestion) {
-      // Load JSON data
-      $.getJSON("/racedata/" + suggestion.data + ".json", function(data) {
-        console.log(data)
-        
-        // Set 'global' var to selected race
-        currentRace = data
- 
-        // Empty HTML
-        $('#outputbox').empty()
-
-        // Create select menu for dates
-        var dateSelect = "<select id='date' onchange='dateChanged();'></select>"
-        $('#outputbox').append(dateSelect)
-        var sortedDates = fillDateSelect(data.dates)
-        
-        // Create select menu for distances
-        var distanceSelect = "<select id='distance' onchange='distanceChanged();'></select>"
-        $('#outputbox').append(distanceSelect)
-        var sortedDistances = fillDistanceSelect(getDistancesAllYears())
-        
-        // Draw map
-        drawMap()
-        
-        // Draw histogram for times
-        var chartdiv = "<div id='histchart'></div>"
-        $('#outputbox').append(chartdiv)
-        drawTimeHistogram()
-        
-        // Draw gender donut chart
-        var genderChart = "<div id='genderchart'></div>"
-        $('#outputbox').append(genderChart)
-        drawGenderChart()
-      })
+      loadAndDisplay(suggestion.data)
     }
   });
 });
+
+// Page load end : check if a query has been made
+if (raceQuery) {
+  loadAndDisplay(raceQuery);
+}
 </script>
 

@@ -6,9 +6,14 @@ layout: home
 exclude: true
 ---
 
-<img src="images/runner_emoji.png">
+![:runner:](images/runner_emoji.png)
 
 # Dive into running data in Switzerland
 
-We fetched running data on [Datasport](http://datasport.com) and this is some
-boring description of what we did ! Blah blah blah...
+Analysis and visualization of running data from [Datasport](http://datasport.com).
+
+
+[Study Lausanne Marathon 2016](/lausanne){:.home-nav}
+[Explore runners data](/runners){:.home-nav}
+[Explore races data](/races){:.home-nav}
+

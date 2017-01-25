@@ -29,6 +29,20 @@ This page focuses on a statistical analysis done on data from *Lausanne Marathon
 
 <div id="townschart"></div>
 
+## Time distribution
+
+### Marathon
+
+<div id="times-42km"></div>
+
+### Semi-marathon
+
+<div id="times-21km"></div>
+
+### 10 km
+
+<div id="times-10km"></div>
+
 <script type="text/javascript">
 
 function drawCountsChart() {
@@ -156,10 +170,57 @@ function drawTowns() {
   })
 }
 
+function drawTimes(distance) {
+  // Load data
+  var times_data = {{ site.data.lausanne_viz.time_distribution | jsonify}}
+  console.log(times_data)
+  
+  // Build chart data
+  var timesMen = times_data[distance]["men"]
+  var timesWomen = times_data[distance]["women"]
+  var numBins = 10
+  var bins = linspace(timesMen.concat(timesWomen), numBins, true)
+  var countsMen = valueCounts(timesMen, bins, true).map(function(x){return x / timesMen.length})
+  var countsWomen = valueCounts(timesWomen, bins, true).map(function(x){return x / timesWomen.length})
+  countsMen.unshift('men')
+  countsWomen.unshift('women')
+
+  // Make bin ticks
+  binTicks = makeBinTicks(bins)
+
+  // Draw chart
+  var chart = c3.generate({
+    bindto: '#times-'+distance,
+    data: { columns: [countsMen, countsWomen], type: 'spline' },
+    point: { show: false },
+    axis: {
+      x: {
+        label: { text: 'Time', position: 'outer-center' },
+        type: 'category',
+        categories: binTicks,
+        tick: {
+          format: function(i){
+            return secondsToTime(binTicks[i].split(' - ')[0])
+          }
+        }
+      },
+      y: { label: 'Fraction of runners' }
+    },
+    tooltip: { show: false },
+    onrendered: function() {
+      // HOTFIX for ticks position...
+      $('#times-'+distance+' .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+    }
+  })
+}
+
 drawCountsChart()
 drawOverallAgeDistribution()
 drawAgeDistribution('women', '#agedistribwomen')
 drawAgeDistribution('men', '#agedistribmen')
 drawTowns()
+drawTimes('42km')
+drawTimes('21km')
+drawTimes('10km')
 </script>
 

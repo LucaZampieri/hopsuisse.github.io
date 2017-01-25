@@ -1,0 +1,1041 @@
+---
+layout: page
+title: Runners
+permalink: /runners/
+---
+
+<div id="searchfield">
+  <h3>Search for a runner... <a id="randomlink" onmouseover="this.style.cursor = 'pointer'" onclick="displayRandom();">or
+feel lucky !</a></h3>
+  <form>
+    <input type="text" name="runner" class="biginput" id="autocomplete" autocomplete="on"
+    value="Type the name of a runner here..."
+    onblur="if (this.value==''){this.value='Type the name of a runner here...';}" 
+    onfocus="if (this.value!=''){this.value='';}">
+  </form>
+</div>
+
+<div id="outputbox">
+  <p id="outputcontent">Choose a runner and the results will be displayed here.</p>
+</div>
+
+<script type="text/javascript">
+	// Global variables
+	var myMap = null;
+	var runners = [
+		{% for runner in site.data.runnersnames %}
+		{value:"{{runner[1]}}",data:"{{runner[0]}}"},
+		{% endfor %}
+	];
+	var currentRunner = null;
+	var allRacesObject = {};
+</script>
+
+<script type="text/javascript">
+
+/* Randomly choose a runner from the dataset and display its info */
+function displayRandom() {
+	var entry = Math.floor(Math.random() * runners.length);
+	loadAndDisplay(runners[entry].data)
+}
+
+/* Encode a race name into the name of its corresponding JSON file 
+ * 
+ * Params: 
+ * - name: string, the original race name
+ * Returns:
+ * - the encoded race name
+ */
+function encodeName(name) {
+	function toLower(str) {
+		return str.toLowerCase();
+	}
+	return name.replace(/[^0-9a-zA-Z+]/g, '').replace(/[A-Z]/g, toLower);
+}
+
+
+
+// ----------------------------- MAPS ------------------------------ //
+/* Draw a map of Switzerland with pointers where a runner has done a 
+ * race, if coordinates are known. Performed only in the situation in 
+ * which "All races" is selected. 
+ */
+function drawFullMap() {
+	// If a map is already drawn, remove it
+	if (myMap) {
+		myMap.remove();
+		myMap = null;
+	}
+	// If a runner is selected, draw the map.
+	if (currentRunner) {
+		$('#map').empty()
+		$('#map').height(340).width(600)
+		myMap = L.map('map').setView([46.4804,8.1336], 7);
+		
+		// Add actual layer
+		var Stamen_Terrain_full = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+			subdomains: 'abcd',
+			minZoom: 0,
+			maxZoom: 18,
+			ext: 'png'
+		}).addTo(myMap);
+		
+		addMarkers()
+	}
+}
+
+/* On the map, add markers in the locations in which the runner has ran.
+ * Display information on the markers.
+ */
+function addMarkers() {
+	// for all races
+	for (let key of Object.keys(currentRunner.races)) {
+		var currentRace = currentRunner.races[key]
+		var mLat = currentRace.latitude;
+		var mLong = currentRace.longitude;
+		var nbParticipation = Object.keys(currentRace.date).length;
+		
+		// Display the marker only if the latitude and longitude are known.
+		if (mLat!=null && mLong!=null) {
+			marker = L.marker([mLat, mLong]).addTo(myMap);
+			var popupMarker = "<b href='#' onclick='clickPopupFullMap(this)' " 
+				+ "onmouseover='mouseOverPopupFullMap(this)' "
+				+ "onmouseout='mouseOutPopupFullMap(this)'>" + key 
+				+ "</b><br>"+ nbParticipation +" participation";
+			if (nbParticipation > 1) 
+				popupMarker += "s.";
+			else
+				popupMarker += ".";
+			// Add a link on the marker, corresponding to the race page
+			// on the website.
+			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(key);
+			popupMarker += "<br><a href=" + mLink + ">Race general details</a>";
+			marker.bindPopup(popupMarker)
+		}
+	}
+}
+
+/* Functions called when an event is launched on a marker of the fullMap */
+// Change the runner's page with its statistics on the chosen race.
+function clickPopupFullMap(elem) {
+	key = elem.innerHTML
+	$('#race').val(key);
+	raceChanged();
+}
+// Highlight the link to the race's webpage.
+function mouseOverPopupFullMap(elem) {
+	elem.style.textDecoration = 'underline';
+	elem.style.cursor = 'pointer';
+}
+function mouseOutPopupFullMap(elem) {
+	elem.style.textDecoration = 'none';
+}
+
+/* Draw a map centered on the race location, if coordinates are known 
+ * This function is only called when ONE specific race is of interest.
+ */
+function drawMap() {
+	// If a map already exists, remove it.
+	if (myMap)
+		myMap.remove();
+	// If a runner is selected
+	if (currentRunner) {
+		
+		// Recover which race is of interest
+		var selectedRace = $("#race").val();
+		if (!selectedRace || selectedRace == ' ') {
+			selectedRace = Object.keys(currentRunner.races)[0];
+		}
+		
+		if (selectedRace != 'all') {
+			var specificRace = currentRunner.races[selectedRace];
+			// Get latitude and longitude
+			var latitude = specificRace.latitude
+			var longitude = specificRace.longitude
+			
+			// If the coordinates exist, draw the map
+			if (latitude!=null && longitude!=null) {
+				$('#map').empty()
+				$('#map').height(400).width(500)
+				
+				myMap = L.map('map').setView([latitude,longitude], 14);
+				// Add actual layer
+				var Stamen_Terrain = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+					attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+					subdomains: 'abcd',
+					minZoom: 0,
+					maxZoom: 18,
+					ext: 'png'
+				}).addTo(myMap);
+				
+				addMarkers();
+			} else { // if coordinates are not known.
+				$('#map').empty()
+				$('#map').width(0).height(0)
+			} 
+		} else { // should never happen
+			$('#map').height(0).width(0);
+			myMap = null;
+		}
+	}
+}
+
+
+
+// --------------- MENU SELECTS -------------------- //
+/* Callback function for race selection */
+function raceChanged() {
+	console.log(currentRunner)
+	// Get selected racekey
+	var selectedRace = $("#race").val();
+	if (!selectedRace || selectedRace == ' ') {
+		selectedRace = Object.keys(currentRunner.races)[0];
+	}
+
+	// Update dates select
+	if (currentRunner) {
+		// remove anything displayed when the race selection changes
+		if ($("#chooseDate")){
+			$("#date").remove();
+			$('#chooseDate').remove(); 
+		}
+		if ($("#statRace")){
+			$("#statRace").remove();
+		}
+		
+		// If all races information have to be shown, draw the full map
+		// of Switzerland with the corresponding markers.
+		if (selectedRace == 'all') {
+			drawFullMap()
+		} else { // one specific races is chosen
+			drawMap()
+			var dates = currentRunner.races[selectedRace].date;
+			// link to the corresponding race webpage.
+			var mLink = 'https://hopsuisse.github.io/races?date='+encodeName(selectedRace);
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
+			
+			if (Object.keys(dates).length > 1) {
+				// Create select menu for dates
+				var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
+					+ "<select id='date' onchange='dateChanged();'></select></p>"
+				$('#selects').append(chooseDate)
+				fillDateSelect(dates)
+			} else { // if only one date for this race, just display it
+				var dateId = Object.keys(dates)[0];
+				var date = "<p id='date'>Run date: <b>" + dates[dateId].day + "/" 
+					+ dates[dateId].month + "/" + dates[dateId].year + "</b></p>"
+				$('#selects').append(date)
+			}
+		}
+		
+		dateChanged();
+	}
+}
+
+/* Callback function for date selection */
+function dateChanged() {
+	var selectedPerf = $("#perf").val();
+	if (!selectedPerf || selectedPerf == ' ') { 
+		// no performance chosen = no performance menu created yet
+		selectedPerf = 'speed'; // default performance
+		// Create select menu for performance
+		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+		$(performanceSelect).replaceAll($('#performance .select'))
+		fillPerformanceSelect();
+	} else { 
+		drawPerformance(selectedPerf);
+	}
+}
+
+/* Callback function for performance selection */
+function perfChanged() {
+	var selectedPerf = $("#perf").val();
+	drawPerformance(selectedPerf);
+}
+
+/* Populate the race select menu with the available races for current runner
+ *
+ * Params :
+ *  - races : dictionary with string races as keys
+ * Returns :
+ *  - sortedRaces : array of dictionaries (see below in for loop)
+ */ 
+function fillRaceSelect(races) {
+	var sortedRaces = [];
+	for (r in races) {
+		sortedRaces.push({
+			'racekey': r,
+		})
+	}
+
+	$('#race').empty();
+	// Add the "All races" options for general statistics on the 
+	// runner's performance
+	allRaces = "<option value='all'>All races</option>"
+	$('#race').append(allRaces);
+	// Append all other options
+	sortedRaces.forEach(function(r) {
+		option = '<option value="'+ r.racekey +'">'+r.racekey+'</option>';
+		$('#race').append(option);
+	})
+	
+	drawFullMap();
+	return sortedRaces;
+}
+
+/* Populate the date select menu with the available dates for current 
+ * race, current runner
+ *
+ * Params :
+ *  - dates : dictionary with string dates as keys and attributes 'day',
+ *      'month', 'year'
+ * Returns :
+ *  - sortedDates : array of dictionaries (see below in for loop)
+ */ 
+function fillDateSelect(dates) {
+	$('#date').empty();
+	if (dates != 'all') {
+		var sortedDates = [];
+		for (var d in dates) {
+			sortedDates.push({
+				'datekey': d,
+				'day': dates[d].day,
+				'month': dates[d].month,
+				'year': dates[d].year
+			})
+		}
+		// sort dates in chronological order
+		sortedDates = sortedDates.sort((a, b) => b.year - a.year);
+		// Add the "All dates" options for general statistics
+		allYears = "<option value='all'>All years</option>";
+		$('#date').append(allYears);
+		// Append all other options
+		sortedDates.forEach(function(d) {
+			option = "<option value='"+ d.datekey +"'>"+
+			d.day + '/' + d.month + '/'+ d.year +"</option>";
+		$('#date').append(option);
+		})
+		
+		return sortedDates;
+	}
+}
+
+/* Populate the date select menu with the different performances 
+ * statistics: speed, page, ranking and distance.
+ */ 
+function fillPerformanceSelect() {
+	$('#perf').append("<option value='speed'> Speed </option>")
+	$('#perf').append("<option value='pace'> Pace </option>")
+	$('#perf').append("<option value='rank'> Ranking </option>")
+	$('#perf').append("<option value='distance'> Distance </option>")
+	drawPerformance('speed');
+}
+
+
+
+// ----------------- PERFORMANCE GRAPHS ---------------------- //
+/* Draws performance chart, given a performance key
+ * 
+ * Params: 
+ * - keyPerf: string, performance chosen
+ */
+function drawPerformance(keyPerf) {
+	// get the names of all races of currentRunner
+	var raceKeys = Object.keys(allRacesObject);
+	
+	// get the selected race, or the first one if not specified (not 
+	// specified = currentRunner has only participated to one race)
+	var selectedRace = $('#race').val();
+	if (!selectedRace || selectedRace == ' ') {
+		raceKeys = [raceKeys[0]];
+	} else if (selectedRace != 'all') {
+		raceKeys = [selectedRace];
+	}
+	
+	// create the chart
+	createPerfChart(raceKeys, keyPerf);
+}
+
+/* Creates the performance chart 
+ * 
+ * Params:
+ * - raceKeys: string array, names of the selected races
+ * - keyPerf: string, performance chosen 
+ */
+function createPerfChart(raceKeys, keyPerf) {
+	var chartPerf = [];
+	var generalPerf = [];
+	// for all races
+	for (var l=0; l<raceKeys.length; l++){
+		
+		// get all the dates corresponding to this race, attended by the 
+		// chosen runner
+		var allDates = Object.keys(currentRunner.races[raceKeys[l]].date);
+		
+		// get the dictionary corresponding to the considered race
+		var currentRace = allRacesObject[raceKeys[l]];
+		// get the interesting performances
+		var tempPartPerf = getAllPerformances(keyPerf, allDates, currentRace)
+		if (keyPerf == 'rank') {
+			// generalPerf will contain the total number of runner for
+			// each course attended by the current runner
+			generalPerf = generalPerf.concat(tempPartPerf[1]);
+		}
+		chartPerf.push(tempPartPerf[0]);
+	}
+	// Make chartPerf into a normal string array instead of array of 
+	// string arrays by concatenation.
+	chartPerf = [].concat.apply([], chartPerf);
+	// get the units corresponding to the chosen performance
+	var units = getPerfUnits(keyPerf);
+			
+	if (chartPerf.length > 1) { // Draw chart and write mean statistics
+		
+		var mLabel = keyPerf+" ["+units+"]";
+		if (keyPerf == 'rank') {
+			mLabel = "normalized ranking [%]";
+		}
+		
+		// Get ticks names and date unique id
+		var ticksNamesAndDates = getTicksAndDatesList(raceKeys);
+		
+		// Sort [dateID, ticksNames, chartPerf] by date ID so that it 
+		// will be plotted in chronological order.
+		ticksNamesAndDates.push(chartPerf);
+		var list2beOrdered = [];
+		for (var ii=0; ii<ticksNamesAndDates[0].length; ii++) {
+			list2beOrdered.push([ticksNamesAndDates[0][ii], 
+								 ticksNamesAndDates[1][ii], 
+								 ticksNamesAndDates[2][ii]]);
+		}
+		list2beOrdered.sort(function(a, b) {return a[0] - b[0]});
+		var fullRacesDesc = [];
+		chartPerf = [];
+		for (var ii=0; ii<list2beOrdered.length; ii++) {
+			fullRacesDesc.push(list2beOrdered[ii][1]);
+			chartPerf.push(list2beOrdered[ii][2]);
+		}
+		
+		// Draw the chart
+		var chart = c3.generate({
+			bindto: '#performance .chart',
+			data: {
+				columns: [ [keyPerf].concat(chartPerf) ]
+			},
+			legend: { show: false },
+			axis: {
+				x: {
+					type: 'category',
+					label: { show: false },
+					tick: {
+						format: function(i) {
+							return fullRacesDesc[i];
+						}
+					}
+				},
+				y: {
+					label: mLabel,
+					tick: {
+						format: d3.format(getPerfPrecision(keyPerf))
+					}
+				}
+			},
+			onrendered: function() {
+				// hotfix for ticks position
+				$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(0,-20)')
+			}
+		});
+		
+		// Write down mean performance
+		var sumPerf = chartPerf.reduce(function(a, b) { return a+b; });
+		var avgPerf = sumPerf/chartPerf.length;
+		var meanPerfStr = "";
+		var maxPerfStr = "";
+		var minPerfStr = "";
+		if (keyPerf != 'rank') { 
+			var maxPerf = Math.max.apply(null, chartPerf);
+			var minPerf = Math.min.apply(null, chartPerf); 
+			if (keyPerf != 'distance') { 
+				// fix the precision to 2 decimal numbers
+				maxPerf = maxPerf.toFixed(2);
+				minPerf = minPerf.toFixed(2);
+			}
+			meanPerfStr = "<u>Mean " + keyPerf + "</u>: " + avgPerf.toFixed(2) + " " + units + "<br>";
+			maxPerfStr = "<u>Maximal " + keyPerf + "</u>: " + maxPerf + " " + units + "<br>";
+			minPerfStr = "<u>Minimal " + keyPerf + "</u>: " + minPerf + " " + units;
+		} else { // case 'rank'
+			// The rank is normalized by the total number of runners
+			// at each race
+			var maxId = chartPerf.indexOf(Math.max.apply(null, chartPerf));
+			var minId = chartPerf.indexOf(Math.min.apply(null, chartPerf));
+			var maxPerf = generalPerf[maxId][0];
+			var minPerf = generalPerf[minId][0];
+			meanPerfStr = "This runner is <u>in average</u> amongst the first " + avgPerf.toFixed(2) 
+				+ "% of the runners.<br>";
+			maxPerfStr = "<u>Worst " + keyPerf + "</u>: " + maxPerf + " out of " + generalPerf[maxId][1] + " runners.<br>";
+			minPerfStr = "<u>Best " + keyPerf + "</u>: " + minPerf + " out of " + generalPerf[minId][1] + " runners.";
+		}
+		
+		// Display
+		var description = "<div class='text'><p>" + meanPerfStr + maxPerfStr + minPerfStr + "</p></div>";
+		$(description).replaceAll('#performance .text')
+			
+	} else { // If only one event selected, only write the performance
+			 // for this event, and display the distribution of the times
+			 // with the position of the current runner.
+		
+		// If a performance is chosen, remove it (we will display all of
+		// them)
+		if ($("#perf")){
+			$('#perf').remove(); 
+		}
+		
+		perf = [];
+		var selectedDate = $('#date').val();
+		if (!selectedDate || selectedDate == " ") {
+			selectedDate = allDates[0];
+		}
+		
+		// Get the performances
+		var keyCat = Object.keys(currentRunner.races[raceKeys[0]].date[selectedDate].categories)[0];
+		perf.push(getPerformance(currentRace, selectedDate, 'distance', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'pace', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'rank', keyCat));
+		perf.push(getPerformance(currentRace, selectedDate, 'speed', keyCat));
+		
+		// Display them
+		var perfSpeed = "<u>Distance</u>: " + perf[0] + " km<br>";
+		var perfPace = "<u>Pace</u>: " + perf[1].toFixed(2) + " min/km<br>";
+		var perfRank = "<u>Rank</u>: " + perf[2][0] + " out of " + perf[2][1] + " runners.<br>";
+		var perfDistance = "<u>Speed</u>: " + perf[3].toFixed(2) + " km/h";
+		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
+		$(description).replaceAll('#performance .text')
+		
+		// Draw the time histogram (second argument: time of currentRunner)
+		drawTimeHistogram(raceKeys[0], perf[0]/perf[3]*3600)
+		
+	}
+}
+
+/* Get identifiers for each races and a date unique number that will be 
+ * useful to sort the races in chronological order.
+ * 
+ * Params:
+ * - raceKeys: string list of the interesting races
+ * Returns: 
+ * - [dates2order, mainList]: dates2order is a list of unique date 
+ * identifiers; mainList is a list of event identifiers human-usable.
+ */
+function getTicksAndDatesList(raceKeys) {
+	var mainList = [];
+	var dates2order = [];
+	// for all interesting races
+	for (var l=0; l<raceKeys.length; l++){
+		var descDates = currentRunner.races[raceKeys[l]].date;
+		var chosenDate = $('#date').val();
+		// if no date is selected, take them all.
+		if (!chosenDate || chosenDate == " " || chosenDate == 'all') {
+			chosenDate = Object.keys(descDates);
+		} else {
+			chosenDate = [chosenDate];
+		}
+		
+		// for all dates, all categories, get the identifiers.
+		for (var k=0; k<chosenDate.length; k++) {
+			var chosenCat = Object.keys(descDates[chosenDate[k]].categories);
+			for (var m=0; m<chosenCat.length; m++) {
+				var actDate = descDates[chosenDate[k]];
+				mainList.push(raceKeys[l]+", "+descDates[chosenDate[k]].year+", "+chosenCat[m]);
+				dates2order.push(actDate.year*10000+actDate.month*100+actDate.day);
+			}
+		}
+	}
+	return [dates2order, mainList];
+}
+
+/* Retrieve the performances for all selected dates and races.
+ * 
+ * Params: 
+ * - keyPerf: string, performance chosen
+ * - allDates: string array, chosen dates
+ * - currentRace: dictionary, chosen races information
+ * Returns: 
+ * - [perf] (or [chartPerf,perf] if keyPerf=='rank') corresponding to
+ * the runner performances at all chosen races (see above)
+ */
+function getAllPerformances(keyPerf, allDates, currentRace) {
+	var perf = []
+	
+	// Consider only the date(s) of interest
+	var selectedDate = $('#date').val();
+	if (!selectedDate || selectedDate == " ") {
+		if (allDates.length > 1) {
+			selectedDate = 'all';
+		} else {
+			selectedDate = allDates[0];
+		}
+	}
+	var runnerDates = currentRunner.races[currentRace.name].date;
+		
+	// If all the dates are selected, get the performance of the 
+	// runner during all those dates, otherwise get the performance 
+	// of the runner only on the specified date, both for each category
+	if (selectedDate == 'all') {
+		for (var j=0; j<allDates.length; j++) {
+			var allCategories = Object.keys(runnerDates[allDates[j]].categories);
+			for (var k=0; k<allCategories.length; k++) {
+				perf.push(getPerformance(currentRace, allDates[j], keyPerf, allCategories[k]));
+			}
+		}
+	} else {
+		var allCategories = Object.keys(runnerDates[selectedDate].categories);
+		for (var k=0; k<allCategories.length; k++) {
+			perf.push(getPerformance(currentRace, selectedDate, keyPerf, allCategories[k]));
+		}
+	}
+	
+	// In the case the chosen performance is the rank, get the 
+	// normalized rank and the total number of runners for each race
+	if (keyPerf == 'rank') {
+		var chartPerf = [];
+		for (var j=0; j<perf.length; ++j) {  // take every second element
+			chartPerf.push(perf[j][0]/perf[j][1]*100);
+		}
+		return [chartPerf, perf];
+	} else {
+		return [perf];
+	}
+}
+
+/* Returns the units corresponding to the chosen performance
+ * 
+ * Params: 
+ * - keyPerf: string, chosen performance
+ * Returns: 
+ * - units: string, corresponding units
+ */ 
+function getPerfUnits(keyPerf) {
+	var units = '';
+	switch (keyPerf) {
+		case 'distance':
+			units = 'km';
+			break;
+		case 'pace': 
+			units = 'min/km';
+			break;
+		case 'rank': 
+			break;
+		default: // 'speed'
+			units = 'km/h';
+			break;
+	}
+	return units;
+}
+
+/* Returns the precision corresponding to the chosen performance
+ * 
+ * Params: 
+ * - keyPerf: string, chosen performance
+ * Returns: 
+ * - precision: string, corresponding wanted precision
+ */ 
+function getPerfPrecision(keyPerf) {
+	var precision = '';
+	switch (keyPerf) {
+		case 'distance':
+			precision = 's';
+			break;
+		case 'pace': 
+			precision = '.3s';
+			break;
+		case 'rank': 
+			precision = 's';
+			break;
+		default: // 'speed'
+			precision = '.4s';
+			break;
+	}
+	return precision;
+}
+
+/* Get the performance of a runner at a specified date, for a 
+ * specified category
+ * 
+ * Params: 
+ * - currentRace: dictionary, chosen race information
+ * - keyDate: string, chosen date name
+ * - keyPerf: string, chosen performance
+ * - keyCat: string, chosen category name
+ * 
+ * Returns: 
+ * - perf: number, the wanted corresponding performance
+ */
+function getPerformance(currentRace, keyDate, keyPerf, keyCat) {
+	var perf = null;
+	var runnerDate = currentRunner.races[currentRace.name].date[keyDate];
+	// Precise dictionary of interest
+	var interest = runnerDate.categories[keyCat];
+	
+	switch (keyPerf) {
+		case 'distance': // units: km
+			perf = interest.distance;
+			break;
+		case 'pace': // units: min/km
+			perf = interest.time/(interest.distance*60); 
+			break;
+		case 'rank': // perf[2*n] = rank, perf[2*n+1] = total 
+					 //number of runners in this race-date-category
+			perf = [];
+			perf.push(interest.rank);
+			perf.push(currentRace.dates[keyDate].categories[keyCat].count);
+			break;
+		default: //'speed', units: km/h
+			perf = interest.distance/interest.time*3600;
+			break;
+	}
+	return perf;
+}
+
+/* Draw histogram for times for the current race, date and category 
+ * selection, together with a line corresponding to the position of the
+ * runner in the histogram.
+ *
+ * Params: 
+ * - raceKey: string, chosen race name
+ * - onesTime: number, time of the current runner to complete the race
+ */
+function drawTimeHistogram(raceKey, onesTime) {
+	// Get selected date and category
+	var mDate = $('#date').val();
+	if (!mDate || mDate == " ") {
+		mDate = Object.keys(currentRunner.races[raceKey].date)[0];
+	}
+	var mCategory = Object.keys(currentRunner.races[raceKey].date[mDate].categories)[0];
+	
+	// Get current race
+	var currentRace = allRacesObject[raceKey];
+	
+	// Get times for this choice
+	var times = getTimes(raceKey, mDate, mCategory);
+  
+	// Create bins and counts
+	var numBins = 10;
+	allTimes = [];
+	for (let key of Object.keys(times)) {
+		allTimes = allTimes.concat(times[key]);
+	}
+	var bins = linspace(allTimes, numBins, true);
+	var counts = [];
+	var mCounts;
+	for (let key of Object.keys(times)) {
+		mCounts = valueCounts(times[key], bins, true);
+		// Build string date
+		dateAttr = currentRace.dates[key];
+		strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year;
+		mCounts.unshift(strDate);
+		counts.push(mCounts);
+	}
+	
+	// Get bin number corresponding to the current runner's performance.
+	var perso = getBinNumber(onesTime, bins);
+
+	// Make bin ticks
+	binTicks = makeBinTicks(bins);
+	// Draw chart
+	var chart = c3.generate({
+		bindto: '#performance .chart',
+		data: {
+		  columns: counts,
+		  type: 'spline',
+		},
+		point: {
+			show: false,
+		},
+		axis: {
+			x: {
+				label: {text:'Time',position:'outer-center'},
+				type: 'category',
+				categories: binTicks,
+				tick: {
+					format: function(i) {
+						return secondsToTime(binTicks[i].split(' - ')[0])
+					}
+				}
+			},
+			y: {
+				label: 'Number of runners'
+			}
+		},
+		grid: {
+			x: {
+				lines: [{value: binTicks[perso], text: currentRunner.name}]
+			}
+		},
+		tooltip: {
+			show: false,
+			grouped: true,
+			format: {
+				title: function(i) {
+					var left = binTicks[i].split(' - ')[0]
+					var right = binTicks[i].split(' - ')[1]
+					return secondsToTime(left) + ' - ' + secondsToTime(right) 
+				},
+			}
+		}, 
+		transition: {
+			duration: 0
+		},
+		onrendered: function() {
+			// hotfix for ticks position
+			$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+		}
+	})
+}
+
+/* Find in which bin of the histogram belongs the current runner (left
+ * bound included, right one excluded, except for the last bin)
+ * 
+ * Params: 
+ * - onesTime: number, time of the current runner to complete the race
+ * - bins: number array, extremities of the bins of the histogram
+ * Returns: 
+ * - ID of the left extremity of the bin in which belongs the runner; -1
+ * is an error flag if he belongs to none of them
+ */ 
+function getBinNumber(onesTime, bins) {
+	for (var j = 0; j < bins.length - 2; j++) {
+		if (onesTime >= bins[j] && onesTime < bins[j+1]) {
+			return j;
+		}
+	}
+	// to include last bound
+	if (onesTime >= bins[bins.length-2] && onesTime <= bins[bins.length-1]) {
+		return bins.length-2;
+	}
+	return -1; // error flag
+}
+
+/* Get times for current race given date and category
+ *
+ * Params :
+ *  - keyRace : string race
+ *  - raceDate : string date
+ *  - raceCategory : string distance
+ * Returns :
+ *  - times : dictionary with string dates as keys and int arrays as values
+ */
+function getTimes(keyRace, raceDate, raceCategory) {
+	var currentRace = allRacesObject[keyRace];
+	var times = {};
+	times[raceDate] = currentRace.dates[raceDate].categories[raceCategory].times;
+	return times;
+}
+
+
+
+// ------------------- LOAD DATA AND CREATE HTML -------------------- //
+/* Opens the JSON file corresponding to the chosen runner in order to 
+ * get its data and display its information.
+ * 
+ * Params :
+ * - encodedName : string, name of the JSON file of the selected runner
+ */
+function loadAndDisplay(encodedName) {
+	allRacesObject = {};
+	
+	// Load JSON data corresponding to the selected runner
+	$.getJSON("../runnerdata/" + encodedName + ".json", function(data) {
+		console.log(data)
+		// Set 'global' var to selected runner
+		currentRunner = data
+		
+		// Load JSON data corresponding to all the races attended by 
+		// the selected runner
+		var racesLeft = Object.keys(currentRunner.races);
+		loadRaceJSONAndDisplay(racesLeft);
+	})
+}
+
+/* Recursive function: load JSON files corresponding to all the races  
+ * attended by the selected runner. Once all of them are loaded, display
+ * the information about the runner.
+ * 
+ * Params :
+ * - racesLeft : string array, list of keys corresponding to the 
+ * remaining races JSON files to load.
+ */
+function loadRaceJSONAndDisplay(racesLeft) {
+	// select the last race in the list of races to load
+	var lastRace = racesLeft[racesLeft.length-1];
+	var encodedName = encodeName(lastRace);
+	// open the corresponding JSON files
+	$.getJSON("../racedata/" + encodedName + ".json", function(data) {
+		if (!allRacesObject[lastRace]) {
+			allRacesObject[lastRace] = [];
+		}
+		allRacesObject[lastRace] = data;
+		// remove from the list the name of the race that has just been 
+		// loaded and either display all the information about the
+		// runner (if no more races have to be loaded) or loads the next
+		// race in the list.
+		racesLeft.pop();
+		if (racesLeft.length == 0) {
+			display();
+		} else {
+			loadRaceJSONAndDisplay(racesLeft);
+		}
+	}); 
+}
+
+/* Create the HTML page, display all the information about the runner
+ * and the different options proposed to the website user. 
+ */
+function display() {
+	console.log(allRacesObject)
+	// Empty HTML
+	$('#outputbox').empty()
+	
+	// Title and personal information
+	var today = new Date();
+	var year = today.getFullYear(); // to get the age of the runner
+	var sex = 'homme';
+	var pronom = "He"; // for a better display
+	if (currentRunner.sex == 'F') {
+		sex = 'femme';
+		pronom = 'She';
+	}
+	var title = "<h2>"+ currentRunner.name +" <small>"
+		+ (year - currentRunner.birth) +" ans, "+ sex 
+		+".</small></h2>";
+	$('#outputbox').append(title);
+	
+	// Prepare space for the map and some global description
+	$('#outputbox').append("<div id='globaldesc'></div>")
+	$('#globaldesc').append("<div id='map'></div>")
+	
+	// Create select menu for races, if the number of races is > 1
+	if (Object.keys(currentRunner.races).length > 1) {
+		
+		$('#globaldesc').append("<div class='text'></div>")
+		var raceNoSelect = 
+			"<p>This runner has participated to <b>" + Object.keys(currentRunner.races).length
+			+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
+		$('#globaldesc .text').append(raceNoSelect);
+		
+		// Select menus division
+		$('#outputbox').append("<div id='selects'></div>")
+		// Race select menu
+		var raceSelect = "<select id='race' onchange='raceChanged();'></select>"
+		$('#selects').append(raceSelect)
+		fillRaceSelect(currentRunner.races)
+		$('#selects').append("<div class='text'></div>")
+		
+		// Display performance + perf select menu
+		$('#outputbox').append("<div id='performance'></div>")
+		$('#performance').append("<h3> Performances:</h3>")
+		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+		$('#performance').append(performanceSelect)
+		$('#performance').append("<div class='text'></div>")
+		$('#performance').append("<div class='chart'></div>")
+		fillPerformanceSelect();
+
+	} else { // If the number of races is 1, no race select menu
+		
+		$('#globaldesc').append("<div class='text'></div>")
+		// get the name of the only race
+		var selectedRace = Object.keys(currentRunner.races)[0];
+		// draw the map with a marker to this race's position
+		drawFullMap();
+		
+		// link of this website corresponding to the global information
+		// on this only race
+		var mLink = 'https://hopsuisse.github.io/races?date='
+			+ encodeName(selectedRace);
+
+		// Create select menu for dates, if the number of dates is > 1		
+		if (Object.keys(currentRunner.races[selectedRace].date).length > 1) {
+			
+			// get the number of times the runner has participated to 
+			// this chosen race and print
+			var nbParticipation = Object.keys(currentRunner.races[selectedRace].date).length;
+			var raceNoSelect = 
+				"<p>This runner has participated to only one competition: <b>" 
+				+ selectedRace + "</b>.<br> " + pronom + " has participated to it <b>"
+				+ nbParticipation + " times</b>.</p>";
+			$('#globaldesc .text').append(raceNoSelect);
+			
+			// Select menus division
+			$('#outputbox').append("<div id='selects'></div>")
+			$('#selects').append("<div class='text'></div>")
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
+			
+			// Date menu select
+			var chooseDate = "<p id='chooseDate'>Or choose a particular date, if desired: "
+				+ "<select id='date' onchange='dateChanged();'></select></p>"
+			$('#selects').append(chooseDate)
+			fillDateSelect(currentRunner.races[selectedRace].date)
+			
+			// Print performances
+			$('#outputbox').append("<div id='performance'></div>")
+			$('#performance').append("<h3> Performances:</h3>")
+			// Performance menu select
+			var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+			$('#performance').append(performanceSelect)
+			$('#performance').append("<div class='text'></div>")
+			$('#performance').append("<div class='chart'></div>")
+			fillPerformanceSelect();
+			
+		} else { // If the number of dates is 1, no date select menu
+			
+			// print race and date information
+			var mDate = currentRunner.races[selectedRace].date;
+			var dateId = Object.keys(mDate)[0];
+			var raceNoSelect = 
+				"<p>This runner has participated to only one competition: <b>" 
+				+ Object.keys(currentRunner.races)[0] + "</b>. <br>Run date: <b>" 
+				+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
+				+ mDate[dateId].year + "</b>.</p>";
+			$('#globaldesc .text').append(raceNoSelect)
+			
+			// Select menus division
+			$('#outputbox').append("<div id='selects'></div>")
+			$('#selects').append("<div class='text'></div>")
+			var statRace = 
+				"<p id='statRace'>For more general statistics about this race, click <a href=" 
+				+ mLink + ">here</a>.</p>"
+			$('#selects .text').append(statRace);
+			
+			// Print performances
+			$('#outputbox').append("<div id='performance'></div>")
+			$('#performance').append("<h3> Performances:</h3>")
+			$('#performance').append("<div class='text'></div>")
+			$('#performance').append("<div class='chart'></div>")
+			drawPerformance('speed')
+
+		}
+	}
+}
+
+
+
+// -------------------- MAIN CALLBACK FUNCTION --------------------- //
+/* Callback function for runner selection through search bar */
+$(function(){
+	// on select value of the autocomplete = runner selection
+	$('#autocomplete').autocomplete({ 
+		delay: 0,
+		lookup: runners,
+		lookupLimit: 6,
+		onSelect: function (suggestion) {
+			loadAndDisplay(suggestion.data);
+		}
+	});
+}); 
+</script>

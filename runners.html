@@ -920,11 +920,11 @@ function display() {
 	// Create select menu for races, if the number of races is > 1
 	if (Object.keys(currentRunner.races).length > 1) {
 		
-		$('#globaldesc').append("<div class='text'></div>")
+		$('#globaldesc').append("<div class='text2'></div>")
 		var raceNoSelect = 
 			"<p>This runner has participated to <b>" + Object.keys(currentRunner.races).length
 			+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
-		$('#globaldesc .text').append(raceNoSelect);
+		$('#globaldesc .text2').append(raceNoSelect);
 		
 		// Select menus division
 		$('#outputbox').append("<div id='selects'></div>")
@@ -945,7 +945,7 @@ function display() {
 
 	} else { // If the number of races is 1, no race select menu
 		
-		$('#globaldesc').append("<div class='text'></div>")
+		$('#globaldesc').append("<div class='text2'></div>")
 		// get the name of the only race
 		var selectedRace = Object.keys(currentRunner.races)[0];
 		// draw the map with a marker to this race's position
@@ -966,7 +966,7 @@ function display() {
 				"<p>This runner has participated to only one competition: <b>" 
 				+ selectedRace + "</b>.<br> " + pronom + " has participated to it <b>"
 				+ nbParticipation + " times</b>.</p>";
-			$('#globaldesc .text').append(raceNoSelect);
+			$('#globaldesc .text2').append(raceNoSelect);
 			
 			// Select menus division
 			$('#outputbox').append("<div id='selects'></div>")
@@ -1002,7 +1002,7 @@ function display() {
 				+ Object.keys(currentRunner.races)[0] + "</b>. <br>Run date: <b>" 
 				+ mDate[dateId].day + '/' + mDate[dateId].month + '/' 
 				+ mDate[dateId].year + "</b>.</p>";
-			$('#globaldesc .text').append(raceNoSelect)
+			$('#globaldesc .text2').append(raceNoSelect)
 			
 			// Select menus division
 			$('#outputbox').append("<div id='selects'></div>")

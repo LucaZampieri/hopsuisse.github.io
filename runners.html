@@ -31,10 +31,10 @@ feel lucky !</a></h3>
 
 /* Randomly choose a runner from the dataset and display its info */
 function displayRandom() {
-	//var keys = Object.keys(runners)
-	var entry = Math.floor(Math.random() * runners.length);
-	//loadAndDisplay(runners[keys[entry]])
-	loadAndDisplay(runners[entry].data)
+  // Get random index
+  var entry = Math.floor(Math.random() * runners.length);
+  // Load JSON file and display
+  loadAndDisplay(runners[entry].data)
 }
 
 /* Encode a race name into the name of its corresponding JSON file 
@@ -813,13 +813,18 @@ function drawTimeHistogram(raceKey, onesTime) {
  * is an error flag if he belongs to none of them
  */ 
 function getBinNumber(onesTime, bins) {
-	for (var j = 0; j < bins.length - 2; j++) {
+	// first bin
+	if (onesTime < bins[1]) {
+		return 0;
+	}
+	// middle bins
+	for (var j = 1; j < bins.length - 2; j++) {
 		if (onesTime >= bins[j] && onesTime < bins[j+1]) {
 			return j;
 		}
 	}
 	// to include last bound
-	if (onesTime >= bins[bins.length-2] && onesTime <= bins[bins.length-1]) {
+	if (onesTime >= bins[bins.length-2]) {
 		return bins.length-2;
 	}
 	return -1; // error flag
@@ -850,7 +855,7 @@ function getTimes(keyRace, raceDate, raceCategory) {
  * Params :
  * - encodedName : string, name of the JSON file of the selected runner
  */
-function loadAndDisplay(encodedName) {
+function loadAndDisplay(encodedName) {	
 	allRacesObject = {};
 	
 	// Load JSON data corresponding to the selected runner
@@ -904,6 +909,11 @@ function display() {
 	console.log(allRacesObject)
 	// Empty HTML
 	$('#outputbox').empty()
+	
+	//$('#oubputbox').append('<div id="loading"></div>')
+	//$(window).ready(function() {
+	//	$('#loading').hide();
+	//});
 	
 	// Title and personal information
 	var today = new Date();

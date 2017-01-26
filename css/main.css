@@ -208,3 +208,19 @@ g.tick {
   padding-left: 10px;
   text-align: center;
 }
+
+table{
+    border-collapse: collapse;
+    border-spacing: 0;
+    border:2px solid #000000;
+    width: 100%;
+}
+
+th{
+    border:1px solid #000000;
+}
+
+td{
+    border:1px solid #000000;
+}
+

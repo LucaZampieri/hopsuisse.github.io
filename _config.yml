@@ -35,6 +35,10 @@ exclude:
   - Gemfile.lock
   #- runnerdata
   #- racedata
+  #- filenames
 keep_files:
   #- runnerdata
   #- racedata
+  #- filenames
+kramdown:
+  auto_ids: true

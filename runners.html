@@ -22,11 +22,7 @@ feel lucky !</a></h3>
 <script type="text/javascript">
 	// Global variables
 	var myMap = null;
-	var runners = [
-		{% for runner in site.data.runnersnames %}
-		{value:"{{runner[1]}}",data:"{{runner[0]}}"},
-		{% endfor %}
-	];
+	var runners = null;
 	var currentRunner = null;
 	var allRacesObject = {};
 </script>
@@ -35,7 +31,9 @@ feel lucky !</a></h3>
 
 /* Randomly choose a runner from the dataset and display its info */
 function displayRandom() {
+	//var keys = Object.keys(runners)
 	var entry = Math.floor(Math.random() * runners.length);
+	//loadAndDisplay(runners[keys[entry]])
 	loadAndDisplay(runners[entry].data)
 }
 
@@ -243,7 +241,7 @@ function dateChanged() {
 		// no performance chosen = no performance menu created yet
 		selectedPerf = 'speed'; // default performance
 		// Create select menu for performance
-		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 		$(performanceSelect).replaceAll($('#performance .select'))
 		fillPerformanceSelect();
 	} else { 
@@ -490,8 +488,8 @@ function createPerfChart(raceKeys, keyPerf) {
 		
 		// If a performance is chosen, remove it (we will display all of
 		// them)
-		if ($("#perf")){
-			$('#perf').remove(); 
+		if ($("#choosePerf")){
+			$('#choosePerf').remove(); 
 		}
 		
 		perf = [];
@@ -512,7 +510,15 @@ function createPerfChart(raceKeys, keyPerf) {
 		var perfPace = "<u>Pace</u>: " + perf[1].toFixed(2) + " min/km<br>";
 		var perfRank = "<u>Rank</u>: " + perf[2][0] + " out of " + perf[2][1] + " runners.<br>";
 		var perfDistance = "<u>Speed</u>: " + perf[3].toFixed(2) + " km/h";
-		var description = "<div class='text'><p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p></div>";
+		var paragraph1 = "<p>" + perfSpeed + perfPace + perfRank + perfDistance + "</p>";
+		var heShe = "he";
+		if (currentRunner.sex == 'S') heShe = 'she';
+		var paragraph2 = "<p>Check out below the position of " + currentRunner.name 
+			+ " into the <b>speed distribution</b> of all the runners present in this race. " 
+			+ "Note that this is an approximate distribution with only 10 bins, " 
+			+ "and the runner is represented in the middle of the bin to which " 
+			+ heShe + " belongs. </p>";
+		var description = "<div class='text'>" + paragraph1 + paragraph2 + "</div>";
 		$(description).replaceAll('#performance .text')
 		
 		// Draw the time histogram (second argument: time of currentRunner)
@@ -923,7 +929,7 @@ function display() {
 		$('#globaldesc').append("<div class='text2'></div>")
 		var raceNoSelect = 
 			"<p>This runner has participated to <b>" + Object.keys(currentRunner.races).length
-			+ " competitions</b>. <br>Click on them on the map or choose them below for more details.</p>";
+			+ " competitions</b>. <br>Click on them on the map or choose them below for more details:</p>";
 		$('#globaldesc .text2').append(raceNoSelect);
 		
 		// Select menus division
@@ -937,7 +943,7 @@ function display() {
 		// Display performance + perf select menu
 		$('#outputbox').append("<div id='performance'></div>")
 		$('#performance').append("<h3> Performances:</h3>")
-		var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 		$('#performance').append(performanceSelect)
 		$('#performance').append("<div class='text'></div>")
 		$('#performance').append("<div class='chart'></div>")
@@ -986,7 +992,7 @@ function display() {
 			$('#outputbox').append("<div id='performance'></div>")
 			$('#performance').append("<h3> Performances:</h3>")
 			// Performance menu select
-			var performanceSelect = "<div class='select'><select id='perf' onchange='perfChanged();'></select></div>"
+			var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 			$('#performance').append(performanceSelect)
 			$('#performance').append("<div class='text'></div>")
 			$('#performance').append("<div class='chart'></div>")
@@ -1023,19 +1029,43 @@ function display() {
 	}
 }
 
+/* Swaps a dictionary from {key: value} to [ {value: value, data:key} ]
+ * 
+ * Params:
+ * - json: dictionary
+ * Returns:
+ * - ret: the inverted dictionary
+ */
+function swap(json){
+	var ret = [];
+	for(var key in json){
+		ret.push({
+			value: json[key],
+			data: key
+		});
+	}
+	return ret;
+}
+
 
 
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for runner selection through search bar */
 $(function(){
-	// on select value of the autocomplete = runner selection
-	$('#autocomplete').autocomplete({ 
-		delay: 0,
-		lookup: runners,
-		lookupLimit: 6,
-		onSelect: function (suggestion) {
-			loadAndDisplay(suggestion.data);
-		}
+	// opens the JSON file corresponding to the dictionary runner's JSON
+	// file name -> runner's name
+	$.getJSON("../filenames/runnersnames.json", function(allRunners) {
+		// swap the dictionary to runner's name --> JSON file name
+		runners = swap(allRunners);
+		// on select value of the autocomplete = runner selection
+		$('#autocomplete').autocomplete({ 
+			delay: 0,
+			lookup: runners,
+			lookupLimit: 6,
+			onSelect: function (suggestion) {
+				loadAndDisplay(suggestion.data);
+			}
+		});
 	});
 }); 
 </script>

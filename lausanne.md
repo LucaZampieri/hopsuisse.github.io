@@ -17,10 +17,10 @@ done, - : not really relevant).
 
 |      | cat | sex | city | age | time | pace |
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:| 
-| cat  |  [√](#counts-of-runners-in-each-category)   | [√](#counts-of-runners-by-sex-and-by-category)    |   -  |  [√](#age-distribution-by-categories)   | -  | [√](#pace-distributions-by-race) |
-| sex  |  -   |  [√](#counts-of-runners-for-each-sex)   |   -   |  [√](#age-distribustions-by-sex)| [√](#times-distribution-by-sex)  | (equivalent to time VS sex) |
+| cat  |  [√](#number-of-runners-in-each-category)   | [√](#number-of-runners-by-sex-and-by-category)    |   -  |  [√](#age-distribution-by-sex-and-by-category)   | -  | [√](#paces-distribution-by-category) |
+| sex  |  -   |  [√](#number-of-runners-for-each-sex)   |   -   |  [√](#age-distribution-by-sex-and-by-category)| [√](#times-distribution-by-sex-and-by-category)  | [√](#times-distribution-by-sex-and-by-category) (equivalent to time VS sex) |
 | city |  -   |   -  |   [√](#towns-of-residence-of-the-runners)  |    -    |   -  | - |
-| age  |   -  |   -  |   -  |  [√](#overall-age-distribution)          |  (equivalent to pace VS age)  | [√](#pace-vs-age) |
+| age  |   -  |   -  |   -  |  [√](#overall-age-distribution)          |  **TODO?** (equivalent to pace VS age)  | **TODO?** |
 
 <br>
 Click on the check marks <font color="red">√</font> to go directly to 
@@ -30,7 +30,26 @@ For simplicity and for a more natural visualization, we only consider
 the three main races of Lausanne marathon: 10km, half marathon and full 
 marathon.
 
-## Counts of runners by sex and by category
+## Number of runners in each category
+
+In the following bar plot is represented the number of runners in each 
+considered category. 
+
+<div id="bar-cat"></div>
+
+The longer the race, the less participants there are. It was expectable 
+since the effort is higher when the distance is increased. 
+
+## Number of runners for each sex
+
+In the following bar plot is represented the number of runners of each 
+sex, all categories mixed.
+
+<div id="bar-sex"></div>
+
+Consequently, there are gloablly more men than women. 
+
+## Number of runners by sex and by category
 
 The number of runners by categories is represented in the following pie 
 plot. 'F' stands for 'female' and 'M' stands for male. 21km and 42 km 
@@ -42,7 +61,9 @@ Most of the runners, males and females, participate to the 10km race.
 This corresponds to almost half of the total number of runners for these 
 three categories. The less popular race is the full marathon, especially
 for females. This result is expectable since it is physically the 
-hardest one. 
+hardest one. The big difference seen in the previous section between the 
+number of male and female runners consequently comes mostly from the 
+marathon. 
 
 ## Age distributions
 
@@ -59,7 +80,7 @@ minimum between 10 and 16 years old that can be socially interesting to
 analyse further. Finally, very few people still run such distances after 
 60 years old, for physical reasons. 
 
-### Age distributions by sex
+### Age distribution by sex and by category
 
 #### Women
 
@@ -127,11 +148,11 @@ is Lausanne. Moreover, it was also expectable that there are many towns
 correspond to places very far from Lausanne, or to very small towns. 
 Between those two extremes, the behaviour is a power law. 
 
-## Times distribution by sex
+## Times distribution by sex and by category
 
 ### Marathon
 
-The following graph represent the fraction of runners with respect to 
+The following graph represents the fraction of runners with respect to 
 the time it took them to complete the full Lausanne marathon. 
 
 <div id="times-42km"></div>
@@ -147,7 +168,7 @@ Mean time to complete the full marathon for:
 
 ### Half-marathon
 
-The following graph represent the fraction of runners with respect to 
+The following graph represents the fraction of runners with respect to 
 the time it took them to complete the half Lausanne marathon. 
 
 <div id="times-21km"></div>
@@ -163,7 +184,7 @@ Mean time to complete the half marathon for:
 
 ### 10 km
 
-The following graph represent the fraction of runners with respect to 
+The following graph represents the fraction of runners with respect to 
 the time it took them to complete the 10km race. 
 
 <div id="times-10km"></div>
@@ -177,6 +198,29 @@ Mean time to complete the 10km race for:
 
 * Men: 00:51.18.
 
+## Paces distribution by category
+
+### Men
+
+The following graph represents the fraction of male runners with respect 
+to their paces during each type of race (10km, half-marathon, full 
+marathon).
+
+<div id="paces-men"></div>
+
+After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
+men pace significantly *increases* with race distance in all categories. 
+
+### Women
+
+The following graph represents the fraction of female runners with 
+respect to their paces during each type of race (10km, half-marathon, 
+full marathon).
+
+<div id="paces-women"></div>
+
+After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
+women pace is significantly *higher* **only** for the marathon. 
 
 <script type="text/javascript">
 
@@ -355,6 +399,104 @@ function drawTimes(distance) {
   })
 }
 
+function drawNumber(what) {
+	// Retrieve data
+	var lab = [];
+	var val = [];
+	var he = 0;
+	switch (what) {
+		case 'cat':
+			lab = ['x', '10km', '21km', '42km'];
+			val = ['value', 5515, 4414, 1318];
+			he = 250;
+			break;
+		default: // 'sex'
+			lab = ['x', 'Men', 'Women'];
+			val = ['value', 6905, 4655];
+			he = 190;
+			break;
+	}
+
+	// Draw bar plot
+	var chart = c3.generate({
+        bindto: '#bar-'+what,
+        padding: {
+            left: 60
+        },
+        data: {
+            x: 'x',
+            columns: [ lab, val ],
+            type: 'bar'
+        },
+        axis: {
+            rotated: true,
+            x: {
+                type: 'category'
+            },
+            y: {
+                label: { 
+					text: 'Number of runners', 
+					position: 'outer-right' 
+				}
+			}
+        },
+        size: {
+			height: he
+		},
+		legend: {show: false}
+	});
+}
+
+function drawPaces(sex) {
+  // Load data
+  var paces_data = {{ site.data.lausanne_viz.pace_distribution | jsonify}}
+  console.log(paces_data)
+  
+  // Build chart data
+  var paces10km = paces_data[sex]["10km"]
+  var paces21km = paces_data[sex]["21km"]
+  var paces42km = paces_data[sex]["42km"]
+  var numBins = 10
+  var bins = linspace(paces10km.concat(paces21km).concat(paces42km), numBins, true)
+  var counts10km = valueCounts(paces10km, bins, true).map(function(x){return x / paces10km.length})
+  var counts21km = valueCounts(paces21km, bins, true).map(function(x){return x / paces21km.length})
+  var counts42km = valueCounts(paces42km, bins, true).map(function(x){return x / paces42km.length})
+  counts10km.unshift('10km')
+  counts21km.unshift('21km')
+  counts42km.unshift('42km') 
+
+  // Make bin ticks
+  binTicks = makeBinTicks(bins)
+
+  // Draw chart
+  var chart = c3.generate({
+    bindto: '#paces-'+sex,
+    data: { columns: [counts10km, counts21km, counts42km], type: 'spline' },
+    point: { show: false },
+    axis: {
+      x: {
+        label: { text: 'Pace', position: 'outer-center' },
+        type: 'category',
+        categories: binTicks,
+        tick: {
+          format: function(i){
+            return secondsToTime(binTicks[i].split(' - ')[0])
+          }
+        }
+      },
+      y: { label: 'Fraction of runners' }
+    },
+    tooltip: { show: false },
+    onrendered: function() {
+      // HOTFIX for ticks position...
+      $('#paces-'+sex+' .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+    }
+  })
+  
+}
+
+drawNumber('cat')
+drawNumber('sex')
 drawCountsChart()
 drawOverallAgeDistribution()
 drawAgeDistribution('women', '#agedistribwomen')
@@ -363,5 +505,7 @@ drawTowns()
 drawTimes('42km')
 drawTimes('21km')
 drawTimes('10km')
+drawPaces('men')
+drawPaces('women')
 </script>
 

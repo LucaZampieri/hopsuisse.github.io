@@ -48,7 +48,7 @@ unique name - birthday tuples.
 The following graph shows the number of runners across time separated 
 by sex. 
 
-**TODO plot** 
+<div id="runners-count-sex"></div>
 
 We can observe a clear increase in time of number of participants in 
 the races, for both sexes, across all Switzerland. 
@@ -57,7 +57,7 @@ The following graph shows the number of runners across time separated
 by distances of the races. We only consider the most relevant distances, 
 that is the one with more runners. 
 
-**TODO plot**
+<div id="runners-count-distance"></div>
 
 Interestingly in the last 3 years, in terms of number of runners, it 
 seems to have been: 
@@ -70,12 +70,17 @@ seems to have been:
 
 
 # Counts of runners across time, by distance
+--> see above
 
 # Counts of runners across time, by sex
+--> see above
 
 # Statistics on Performance VS Age
 
 # Age across editions
+
+<select id='race' onchange='drawAgesAcrossEditions();'></select>
+<div id="age-popular-races"></div>
 
 # Plot Time VS Temperature for marathons
 
@@ -83,6 +88,103 @@ seems to have been:
 
 # Distribution of the number of editions, per race
 
+<div id="editions-distribution"></div>
+
 # Distribution of the number of runners, per race
 
 # Distribution of the number of races, per runner
+
+
+
+<script type="text/javascript">
+
+function drawCountAcrossTime(category) {
+  // category = 'sex' or 'distance'
+  var data = {{ site.data.full_viz.across-time | jsonify }}
+  var categData = data["runners-count-"+category]
+  var cols = []
+  var xsValues = {}
+  for (let key of Object.keys(categData)) {
+    var count = categData[key]["counts"]
+    var years = categData[key]["years"]
+    count.unshift(key)
+    years.unshift(key+"_x")
+    cols.push(count)
+    cols.push(years)
+    xsValues[key] = key+"_x"
+  }
+  var chart = c3.generate({
+    bindto: '#runners-count-'+category,
+    data: {
+      xs: xsValues,
+      columns: cols,
+      type: 'bar'
+    }
+  })
+}
+
+function drawEventsCount() {
+  var data = {{ site.data.full_viz.across-time | jsonify }}
+  var eventsData = data["events-count"]
+  var xsValues = eventsData.months
+  xsValues.unshift("months")
+  var counts = eventsData.count
+  counts.unshift("counts")
+  var chart = c3.generate({
+    bindto: '#events-count',
+    data: {
+      x: 'months',
+      columns: [xsValues, counts],
+      type: 'scatter'
+    }
+  })
+}
+
+function drawEditionsDistribution() {
+  var data = {{ site.data.full_viz.across-time | jsonify }}
+  var editionsData = data["editions-distribution"]
+  var xsValues = editionsData["editions-per-race"]
+  xsValues.unshift('editions per race')
+  var counts = editionsData.count
+  counts.unshift("counts")
+  var chart = c3.generate({
+    bindto: '#editions-distribution',
+    data: {
+      x: 'editions per race',
+      columns: [xsValues, counts],
+      type: 'bar'
+    }
+  })
+}
+
+function fillRaceSelect() {
+  var data = {{ site.data.full_viz.across-time.age-popular-races | jsonify }}
+  Object.keys(data).forEach(function(name) {
+    $('#race').append(new Option(name, name));
+  })
+}
+
+function drawAgesAcrossEditions() {
+  var selectedRace = $('#race').val()  
+  var data = {{ site.data.full_viz.across-time.age-popular-races | jsonify }}
+  var raceData = data[selectedRace]
+  var meanAges = raceData.ages
+  meanAges.unshift("mean age")
+  var years = raceData.years
+  years.unshift("year")
+  var chart = c3.generate({
+    bindto: '#age-popular-races',
+    data: {
+      x: 'year',
+      columns: [years, meanAges]
+    }
+  })
+}
+
+drawCountAcrossTime('sex')
+drawCountAcrossTime('distance')
+drawEventsCount()
+drawEditionsDistribution()
+fillRaceSelect()
+drawAgesAcrossEditions()
+</script>

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Exploratory Statistics on the full dataset
+title: Exploratory statistics on the full dataset
 permalink: /fullanalysis/
 ---
 
@@ -16,8 +16,8 @@ symmetric.
 
 |             | distance   | sex    | age  | time  | pace | race-year | runner | event | weather |
 |:----:       |:----:      | :----: |:----:| :----:|:----:|   :----:  |:----:  |:----: |:----:   |
-|distance     |      -     |        |      |       |      |[√](#counts-of-runners-across-time-by-distance)| || |  
-|sex          |            | -      |      |       |      | [√](#counts-of-runners-across-time-by-sex) |  |  | |
+|distance     |      -     |        |      |       |      |[√](#number-of-runners-across-time-by-distance)| || |  
+|sex          |            | -      |      |       |      | [√](#number-of-runners-across-time-by-sex) |  |  | |
 |age          |            |        |    - |[√](#statistics-on-performance-vs-age)|      |[√](#age-across-editions)|          |       | | 
 |time         |            |        |      |  -    |      |         |          |       |[√](#plot-time-vs-temperature-for-marathons)|
 |pace         |            |        |      |       |  -   |         |          |       |[√](#plot-pace-vs-temperature)|
@@ -43,39 +43,51 @@ other resources on the web.
 We have therefore decided to define uniquely a runner only upon the 
 unique name - birthday tuples.
 
-# Statistics across time
+## Statistics across time
+
+# Number of runners across time, by sex
 
 The following graph shows the number of runners across time separated 
 by sex. 
 
 <div id="runners-count-sex"></div>
 
-We can observe a clear increase in time of number of participants in 
-the races, for both sexes, across all Switzerland. 
+We can observe a clear *increase* in time of the number of participants 
+in the races, for both sex, across all Switzerland. 
+
+# Number of runners across time, by distance
 
 The following graph shows the number of runners across time separated 
 by distances of the races. We only consider the most relevant distances, 
-that is the one with more runners. 
+that is the ones with a larger number of runners. 
 
 <div id="runners-count-distance"></div>
 
 Interestingly in the last 3 years, in terms of number of runners, it 
 seems to have been: 
 
-* a decrease for the marathon;
+* an *increase* for the 10 km;
 
-* an increase for the 10 km;
+* quite a *stable* situation for the half-marathon;
 
-* quite a stable situation for the half-marathon.
+* a *decrease* for the marathon.
 
+# Statistics on performance VS age
 
-# Counts of runners across time, by distance
---> see above
+## Marathon
 
-# Counts of runners across time, by sex
---> see above
+<select id='race-42km' onchange='drawTimeWrtAge("42km");'></select>
+<div id="timevsage-42km"></div>
 
-# Statistics on Performance VS Age
+## Half marathon / 20km
+
+<select id='race-21km'  onchange="drawTimeWrtAge('21km');"></select>
+<div id="timevsage-21km"></div>
+
+## 10km
+
+<select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
+<div id="timevsage-10km"></div>
 
 # Age across editions
 
@@ -164,6 +176,14 @@ function fillRaceSelect() {
   })
 }
 
+function fillRaceSelect2(km) {
+	var data = {{ site.data.full_viz.timeVSage | jsonify }}
+	console.log(data)
+	Object.keys(data[km]["men"]).forEach(function(name) {
+		$('#race-'+km).append(new Option(name, name));
+	})
+}
+
 function drawAgesAcrossEditions() {
   var selectedRace = $('#race').val()  
   var data = {{ site.data.full_viz.across-time.age-popular-races | jsonify }}
@@ -181,10 +201,45 @@ function drawAgesAcrossEditions() {
   })
 }
 
+function drawTimeWrtAge(km) {
+	var selectedRace = $('#race-'+km).val() 
+	var data = {{ site.data.full_viz.timeVSage | jsonify }}
+	data = data[km]
+	
+	var menRaceData = data["men"][selectedRace]
+	var womenRaceData = data["women"][selectedRace]
+	var menMeanTimes = menRaceData.times
+	menMeanTimes.unshift("men")
+	var womenMeanTimes = womenRaceData.times
+	womenMeanTimes.unshift("women")
+	var menAges = menRaceData.ages
+	menAges.unshift("men age")
+	var womenAges = womenRaceData.ages
+	womenAges.unshift("women age")
+	
+	var chart = c3.generate({
+		bindto: '#timevsage-'+km,
+		data: {
+			xs: {
+				'men': 'men age',
+				'women': 'women age'
+			}, 
+			columns: [menAges, womenAges, menMeanTimes, womenMeanTimes]
+		}
+	});
+	
+}
+
 drawCountAcrossTime('sex')
 drawCountAcrossTime('distance')
 drawEventsCount()
 drawEditionsDistribution()
 fillRaceSelect()
 drawAgesAcrossEditions()
+fillRaceSelect2("42km")
+drawTimeWrtAge("42km")
+fillRaceSelect2("21km")
+drawTimeWrtAge("21km")
+fillRaceSelect2("10km")
+drawTimeWrtAge("10km")
 </script>

@@ -15,9 +15,9 @@ hosted on Github.
 The following table summarizes correlation study among features (√ : 
 done, - : not really relevant).
 
-|      | cat | sex | city | age | time | pace |
+|      | category | sex | city | age | time | pace |
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:| 
-| cat  |  [√](#number-of-runners-in-each-category)   | [√](#number-of-runners-by-sex-and-by-category)    |   -  |  [√](#age-distribution-by-sex-and-by-category)   | -  | [√](#paces-distribution-by-category) |
+| category  |  [√](#number-of-runners-in-each-category)   | [√](#number-of-runners-by-sex-and-by-category)    |   -  |  [√](#age-distribution-by-sex-and-by-category)   | -  | [√](#paces-distribution-by-category) |
 | sex  |  -   |  [√](#number-of-runners-for-each-sex)   |   -   |  [√](#age-distribution-by-sex-and-by-category)| [√](#times-distribution-by-sex-and-by-category)  | [√](#times-distribution-by-sex-and-by-category) (equivalent to time VS sex) |
 | city |  -   |   -  |   [√](#towns-of-residence-of-the-runners)  |    -    |   -  | - |
 | age  |   -  |   -  |   -  |  [√](#overall-age-distribution)          |  **TODO?** (equivalent to pace VS age)  | **TODO?** |
@@ -155,6 +155,9 @@ Between those two extremes, the behaviour is a power law.
 The following graph represents the fraction of runners with respect to 
 the time it took them to complete the full Lausanne marathon. 
 
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
+
 <div id="times-42km"></div>
 
 After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
@@ -171,6 +174,9 @@ Mean time to complete the full marathon for:
 The following graph represents the fraction of runners with respect to 
 the time it took them to complete the half Lausanne marathon. 
 
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
+
 <div id="times-21km"></div>
 
 After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
@@ -186,6 +192,9 @@ Mean time to complete the half marathon for:
 
 The following graph represents the fraction of runners with respect to 
 the time it took them to complete the 10km race. 
+
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
 
 <div id="times-10km"></div>
 
@@ -206,6 +215,9 @@ The following graph represents the fraction of male runners with respect
 to their paces during each type of race (10km, half-marathon, full 
 marathon).
 
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
+
 <div id="paces-men"></div>
 
 After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
@@ -216,6 +228,9 @@ men pace significantly *increases* with race distance in all categories.
 The following graph represents the fraction of female runners with 
 respect to their paces during each type of race (10km, half-marathon, 
 full marathon).
+
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
 
 <div id="paces-women"></div>
 

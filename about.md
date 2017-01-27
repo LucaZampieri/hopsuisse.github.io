@@ -45,4 +45,5 @@ We also use several libraries and tools throughout the pages :
 * [jQuery-Autocomplete](https://github.com/devbridge/jQuery-Autocomplete)
 * [Leaflet](http://leafletjs.com)
 * [Google Fonts](https://fonts.google.com)
+* [Glyphicons Free](https://glyphicons.com)
 * [Weather Icons](https://erikflowers.github.io/weather-icons/)

@@ -5,43 +5,178 @@ permalink: /lausanne/
 ---
 
 This page focuses on a statistical analysis done on data from *Lausanne Marathon
-2016*.
+2016*. 
 
-## Counts
+The data used was parsed from this [Datasport page](https://services.datasport.com/2016/lauf/lamara/). 
+For more details about how the analysis is done, please refer to this 
+[jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/lausanne_marathon_analysis.ipynb)
+hosted on Github.
+
+The following table summarizes correlation study among features (√ : 
+done, - : not really relevant).
+
+|      | cat | sex | city | age | time | pace |
+|:----:|:----:|:----:|:----:|:----:|:----:|:----:| 
+| cat  |  [√](#counts-of-runners-in-each-category)   | [√](#counts-of-runners-by-sex-and-by-category)    |   -  |  [√](#age-distribution-by-categories)   | -  | [√](#pace-distributions-by-race) |
+| sex  |  -   |  [√](#counts-of-runners-for-each-sex)   |   -   |  [√](#age-distribustions-by-sex)| [√](#times-distribution-by-sex)  | (equivalent to time VS sex) |
+| city |  -   |   -  |   [√](#towns-of-residence-of-the-runners)  |    -    |   -  | - |
+| age  |   -  |   -  |   -  |  [√](#overall-age-distribution)          |  (equivalent to pace VS age)  | [√](#pace-vs-age) |
+
+<br>
+Click on the check marks <font color="red">√</font> to go directly to 
+the corresponding sections.
+
+For simplicity and for a more natural visualization, we only consider 
+the three main races of Lausanne marathon: 10km, half marathon and full 
+marathon.
+
+## Counts of runners by sex and by category
+
+The number of runners by categories is represented in the following pie 
+plot. 'F' stands for 'female' and 'M' stands for male. 21km and 42 km 
+respectively correspond to the half and the full marathon. 
 
 <div id="countschart"></div>
 
-## Age distribution
+Most of the runners, males and females, participate to the 10km race. 
+This corresponds to almost half of the total number of runners for these 
+three categories. The less popular race is the full marathon, especially
+for females. This result is expectable since it is physically the 
+hardest one. 
 
-### Overall
+## Age distributions
+
+### Overall age distribution
+
+The following graph represents the fraction of the total number of 
+runners with respect to their age at the time of the race.
 
 <div id="agedistriboverall"></div>
 
-### Women
+The younger runner was 5 years old, the older one was 82 years old. Most 
+of the runners are between 25 and 45 years old. There is an interesting 
+minimum between 10 and 16 years old that can be socially interesting to 
+analyse further. Finally, very few people still run such distances after 
+60 years old, for physical reasons. 
+
+### Age distributions by sex
+
+#### Women
+
+The following graph represents the fraction of the total number of female
+runners with respect to their age at the time of the race, for the three 
+different chosen categories. 
+
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
 
 <div id="agedistribwomen"></div>
 
-### Men
+After performing 2-samples Kolmogorov-Smirnov statistical tests, we conclude 
+that only women who run the 10km race are significantly *younger* than 
+the ones running the full marathon or the half marathon. 
+
+The average age for each race is: 
+
+* 10km: 36.11 years old;
+
+* 21km: 37.48 years old; 
+
+* 42km: 39.16 years old.
+
+#### Men
+
+The following graph represents the fraction of the total number of male
+runners with respect to their age at the time of the race, for the three 
+different chosen categories. 
+
+On the legend, you can click or unclick some of the categories to only 
+see the ones you want to see.
 
 <div id="agedistribmen"></div>
 
-## Towns
+After performing 2-samples Kolmogorov-Smirnov statistical tests, we conclude 
+that only men who run the full marathon are significantly *older* than 
+the ones running the half marathon or the 10km race.
+
+The average age for each race is: 
+
+* 10km: 40.26 years old;
+
+* 21km: 39.88 years old; 
+
+* 42km: 42.15 years old.
+
+#### Women vs Men
+
+After performing 2-samples Kolmogorov-Smirnov statistical tests, we conclude 
+that women are significantly *younger* than men in *all* the three chosen 
+competitions. 
+
+## Towns of residence of the runners
+
+The following graph represents the number of towns from which come from 
+the runners with respect to the number of runners coming from this town 
+and that participate to the Lausanne marathon. 
 
 <div id="townschart"></div>
 
-## Time distribution
+It is obvious that the one city from where come more than 1000 runners 
+is Lausanne. Moreover, it was also expectable that there are many towns 
+(around 1000) from which comes only one runner. These towns either 
+correspond to places very far from Lausanne, or to very small towns. 
+Between those two extremes, the behaviour is a power law. 
+
+## Times distribution by sex
 
 ### Marathon
 
+The following graph represent the fraction of runners with respect to 
+the time it took them to complete the full Lausanne marathon. 
+
 <div id="times-42km"></div>
 
-### Semi-marathon
+After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
+men are significantly *faster* than women at the full marathon. 
+
+Mean time to complete the full marathon for: 
+
+* Women: 4:16.47;
+
+* Men: 3:54.59.
+
+### Half-marathon
+
+The following graph represent the fraction of runners with respect to 
+the time it took them to complete the half Lausanne marathon. 
 
 <div id="times-21km"></div>
 
+After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
+men are significantly *faster* than women at the half-marathon. 
+
+Mean time to complete the half marathon for: 
+
+* Women: 2:03.28;
+
+* Men: 01:50.10.
+
 ### 10 km
 
+The following graph represent the fraction of runners with respect to 
+the time it took them to complete the 10km race. 
+
 <div id="times-10km"></div>
+
+After performing a 2-samples Kolmogorov-Smirnov test, we conclude that 
+men are significantly *faster* than women at the 10km race. 
+
+Mean time to complete the 10km race for: 
+
+* Women: 00:59.03;
+
+* Men: 00:51.18.
+
 
 <script type="text/javascript">
 
@@ -136,6 +271,11 @@ function drawAgeDistribution(sex, bindName) {
   })
 }
 
+var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+function formatPower(d) { 
+	return (d + "").split("").map(function(c) { return superscript[c]; })
+}
+
 function drawTowns() {
   var towns = {{ site.data.lausanne_viz.towns | jsonify }}
   var numRunnersLog = towns.num_runners.map(Math.log10)
@@ -143,6 +283,7 @@ function drawTowns() {
 
   numRunnersLog.unshift('num runners')
   numTownsLog.unshift('num towns')
+  
   var chart = c3.generate({
     bindto: '#townschart',
     data: {
@@ -154,14 +295,14 @@ function drawTowns() {
       x: {
         tick: {
           values: [0, 1, 2, 3],
-          format: function(d){return '10^'+d}
+          format: function(d){return '10'+formatPower(d)}
         },
-        label: {text:'Number of runners / town',position:'outer-center'},
+        label: {text:'Number of runners',position:'outer-center'},
       },
       y: {
         tick: {
           values: [0, 1, 2, 3],
-          format: function(d){return '10^'+d}
+          format: function(d){return '10'+formatPower(d)}
         },
         label: 'Number of towns'
       }

@@ -9,25 +9,25 @@ permalink: /fullanalysis/
 The workflow we try to follow in this study is the one suggested in 
 this [useful paper](http://science.sciencemag.org/content/347/6228/1314.full). 
 
-The following table summarizes correlation study among features (√ : 
+The following table summarizes correlation study among features (✔ : 
 done, - : not really relevant). Mind that the study between feature x 
 and y is in position x and y of the table, that is supposed to 
 symmetric.
 
 |             | distance   | sex    | age  | time  | pace | race-year | runner | event | weather |
 |:----:       |:----:      | :----: |:----:| :----:|:----:|   :----:  |:----:  |:----: |:----:   |
-|distance     |      -     |        |      |       |      |[√](#number-of-runners-across-time-by-distance)| || |  
-|sex          |            | -      |      |       |      | [√](#number-of-runners-across-time-by-sex) |  |  | |
-|age          |            |        |    - |[√](#statistics-on-performance-vs-age)|      |[√](#age-across-editions)|          |       | | 
-|time         |            |        |      |  -    |      |         |          |       |[√](#plot-time-vs-temperature-for-marathons)|
-|pace         |            |        |      |       |  -   |         |          |       |[√](#plot-pace-vs-temperature)|
-|race-year    |            |        |      |       |      |  -      |          |[√](#distribution-of-the-number-of-editions-per-race)|         |
-|runner       |            |        |      |       |      |         |   -      |[√](#distribution-of-the-number-of-runners-per-race)|         |
-|event        |            |        |      |       |      |         |[√](#distribution-of-the-number-of-races-per-runner)|     - |         |
+|distance     |      -     |        |      |       |      |[✔](#number-of-runners-across-time-by-distance)| || |  
+|sex          |            | -      |      |       |      | [✔](#number-of-runners-across-time-by-sex) |  |  | |
+|age          |            |        |    - |[✔](#statistics-on-performance-vs-age)|      |[✔](#age-across-editions)|          |       | | 
+|time         |            |        |      |  -    |      |         |          |       |[✔](#plot-time-vs-temperature-for-marathons)|
+|pace         |            |        |      |       |  -   |         |          |       |[✔](#plot-pace-vs-temperature)|
+|race-year    |            |        |      |       |      |  -      |          |[✔](#distribution-of-the-number-of-editions-per-race)|         |
+|runner       |            |        |      |       |      |         |   -      |[✔](#distribution-of-the-number-of-runners-per-race)|         |
+|event        |            |        |      |       |      |         |[✔](#distribution-of-the-number-of-races-per-runner)|     - |         |
 |weather      |            |        |      |       |      |         |          |       |    -    |
 
 <br>
-Click on the check marks <font color="red">√</font> to go directly to 
+Click on the check marks <font color="red">✔</font> to go directly to 
 the corresponding sections.
 
 ## Note on unique runners
@@ -72,39 +72,84 @@ seems to have been:
 
 * a *decrease* for the marathon.
 
-# Statistics on performance VS age
+## Distribution of the number of editions per race
 
-## Marathon
-
-<select id='race-42km' onchange='drawTimeWrtAge("42km");'></select>
-<div id="timevsage-42km"></div>
-
-## Half marathon / 20km
-
-<select id='race-21km'  onchange="drawTimeWrtAge('21km');"></select>
-<div id="timevsage-21km"></div>
-
-## 10km
-
-<select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
-<div id="timevsage-10km"></div>
-
-# Age across editions
-
-<select id='race' onchange='drawAgesAcrossEditions();'></select>
-<div id="age-popular-races"></div>
-
-# Plot Time VS Temperature for marathons
-
-# Plot Pace VS Temperature
-
-# Distribution of the number of editions, per race
+The following graph shows the number of races with respect to the 
+number of times these races took place. 
 
 <div id="editions-distribution"></div>
 
-# Distribution of the number of runners, per race
+Consequently, most races have been organized at most twice. The most 
+frequent race in history is Chäsitzerlouf - Kehrsatz, which has been 
+organized 16 times. Right after, with 15 editions, come 20km de Lausanne, 
+Basler Stadtlauf, Frauenfelder, Gurtenclassic - Wabern, Kerzerslauf, and 
+Schweizer Frauenlauf Bern. 
 
-# Distribution of the number of races, per runner
+## Age across editions
+
+For this study we use the first 20 races with the largest number of 
+runners. 
+
+Select a race: <select id='race' onchange='drawAgesAcrossEditions();'></select>
+<div id="age-popular-races"></div>
+
+After performing an [Mann-Kendall]
+(http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm) test, 
+we conclude that for many of the races analysed, it is not possible to 
+claim a global trend for the runners' mean age, across time. The test 
+is affected by the lack of data points. We have however also obtained 
+some significant results: 
+
+* there is an *increase* of the runner's mean age for ASICS Bremgarter 
+Reusslauf, Jungfrau-Marathon and Kerzerslauf; 
+
+* there is a *decrease* of the runner's mean age for 20km de Lausanne, 
+Course de l'Escalade, Hallwilerseelauf, Luzerner Stadtlauf, 
+Morat-Fribourg, Thuner Stadtlauf and Zürcher Silvesterlauf. 
+
+## Statistics on performance VS age
+
+Note that we only consider races with the higher number of runners, and 
+categories with standard running distances: 10km, 20km/half marathon 
+and full marathon.
+
+We will see that a U-shape is observed for the most popular events, 
+especially when enough data is available. This shape becomes more 
+visible with longer distances (full marathon), while it somehow fades 
+out for shorter distances, like 10 km.
+
+# Marathon
+
+The following graph represents the mean time the runners took to finish 
+a full marathon with respect to the age of the runner, for different 
+races. 
+
+Select a race: <select id='race-42km' onchange='drawTimeWrtAge("42km");'></select>
+<div id="timevsage-42km"></div>
+
+# Half marathon / 20km
+
+The following graph represents the mean time the runners took to finish 
+a half marathon with respect to the age of the runner, for different 
+races. 
+
+Select a race: <select id='race-21km'  onchange="drawTimeWrtAge('21km');"></select>
+<div id="timevsage-21km"></div>
+
+# 10km
+The following graph represents the mean time the runners took to finish 
+a 10km race with respect to the age of the runner, for different races. 
+
+Select a race: <select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
+<div id="timevsage-10km"></div>
+
+# (Plot Time VS Temperature for marathons) **TODO**
+
+# (Plot Pace VS Temperature) **TODO**
+
+# (Distribution of the number of runners, per race) **TODO**
+
+# (Distribution of the number of races, per runner) **TODO**
 
 
 
@@ -131,7 +176,15 @@ function drawCountAcrossTime(category) {
       xs: xsValues,
       columns: cols,
       type: 'bar'
-    }
+    },
+    axis: {
+		x: { 
+			label: {text:'Year',position:'outer-right'}
+		}, 
+		y: {
+			label: {text:'Total number of runners',position:'inner-center'}
+		}
+	}
   })
 }
 
@@ -178,7 +231,6 @@ function fillRaceSelect() {
 
 function fillRaceSelect2(km) {
 	var data = {{ site.data.full_viz.timeVSage | jsonify }}
-	console.log(data)
 	Object.keys(data[km]["men"]).forEach(function(name) {
 		$('#race-'+km).append(new Option(name, name));
 	})
@@ -197,7 +249,15 @@ function drawAgesAcrossEditions() {
     data: {
       x: 'year',
       columns: [years, meanAges]
-    }
+    }, 
+    axis: {
+			x: {
+				label: {text:'Race year',position:'outer-right'}
+			}, 
+			y: {
+				label: {text: "Runners mean age", position: 'inner-center'}
+			}
+		}
   })
 }
 
@@ -225,6 +285,14 @@ function drawTimeWrtAge(km) {
 				'women': 'women age'
 			}, 
 			columns: [menAges, womenAges, menMeanTimes, womenMeanTimes]
+		}, 
+		axis: {
+			x: {
+				label: {text:'Runners mean age',position:'outer-right'}
+			}, 
+			y: {
+				label: {text: 'Time [min]', position: 'inner-center'}
+			}
 		}
 	});
 	

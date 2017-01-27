@@ -139,8 +139,8 @@ select#date, select#distance, select#perf {
   appearance:none;
 }
 
-select#race {
-  width: 40%;
+select#race, select#race-42km, select#race-21km, select#race-10km {
+  width: 45%;
   height: 30px;
   padding: 6px;
   padding-left: 10px;

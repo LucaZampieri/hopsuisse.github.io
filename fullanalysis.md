@@ -18,18 +18,20 @@ hosted on Github.
 
 ## Note on unique runners
 
-Some runners may have the same name but a different birth years, or live 
-in different places.
+Given the significant size of the dataset, we encountered some difficulties when
+trying to distinguish runners according to their attributes, given that names
+are not unique.
 
-Checking the demographics of few races, we could notice that there are 
-even some namesakes born the same year but with different residence 
-cities. However this does not necessarily mean that there are two 
-different runners, as some people might change residence during their 
-running career - we can find that, by cross-checking our dataset with 
-other resources on the web.
+Checking the demographics of a few races, we could notice that there were even
+some namesakes born the same year but with different residence cities. At first
+glance this combination (name, birthyear and residence city) could have been
+used to determine unique runners, *however* this does not necessarily works :
+some people might just change residence during their running career (indeed we
+can find that by cross-checking our dataset with other resources on the web) and
+be idientified as two different people.
 
-We have therefore decided to define uniquely a runner only upon the 
-unique name - birthday tuples.
+We have therefore decided to stick to a simple rule and to distinguish runners
+based on their *name* **and** *birthyear* combination.
 
 ## Statistics across time
 
@@ -209,7 +211,11 @@ function drawEditionsDistribution() {
       x: 'editions per race',
       columns: [xsValues, counts],
       type: 'bar'
-    }
+    },
+    axis: {
+      x: {label: {text: 'Number of editions per race', position:'outer-right'}}, 
+      y: {label: {text: 'Number of races', position: 'outer-center'}}
+	}
   })
 }
 
@@ -231,22 +237,24 @@ function drawAgesAcrossEditions() {
   var selectedRace = $('#race').val()  
   var data = {{ site.data.full_viz.across-time.age-popular-races | jsonify }}
   var raceData = data[selectedRace]
-  var meanAges = raceData.ages
+  var meanAges = raceData['mean_ages']
+  var medianAges = raceData['median_ages']
   meanAges.unshift("mean age")
+  medianAges.unshift("median age")
   var years = raceData.years
   years.unshift("year")
   var chart = c3.generate({
     bindto: '#age-popular-races',
     data: {
       x: 'year',
-      columns: [years, meanAges]
+      columns: [years, meanAges, medianAges]
     }, 
     axis: {
 			x: {
-				label: {text:'Race year',position:'outer-right'}
+				label: {text: 'Race year', position:'outer-right'}
 			}, 
 			y: {
-				label: {text: "Runners mean age", position: 'inner-center'}
+				label: {text: 'Runners age', position: 'outer-center'}
 			}
 		}
   })
@@ -259,10 +267,10 @@ function drawTimeWrtAge(km) {
 	
 	var menRaceData = data["men"][selectedRace]
 	var womenRaceData = data["women"][selectedRace]
-	var menMeanTimes = menRaceData.times
-	menMeanTimes.unshift("men")
-	var womenMeanTimes = womenRaceData.times
-	womenMeanTimes.unshift("women")
+	var menMedianTimes = menRaceData.median_times
+	menMedianTimes.unshift("men")
+	var womenMedianTimes = womenRaceData.median_times
+	womenMedianTimes.unshift("women")
 	var menAges = menRaceData.ages
 	menAges.unshift("men age")
 	var womenAges = womenRaceData.ages
@@ -275,14 +283,14 @@ function drawTimeWrtAge(km) {
 				'men': 'men age',
 				'women': 'women age'
 			}, 
-			columns: [menAges, womenAges, menMeanTimes, womenMeanTimes]
+			columns: [menAges, womenAges, menMedianTimes, womenMedianTimes]
 		}, 
 		axis: {
 			x: {
 				label: {text:'Runners mean age',position:'outer-right'}
 			}, 
 			y: {
-				label: {text: 'Time [min]', position: 'inner-center'}
+				label: {text: 'Median time [min]', position: 'inner-center'}
 			}
 		}
 	});

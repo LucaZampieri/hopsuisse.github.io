@@ -9,6 +9,10 @@ permalink: /fullanalysis/
 The workflow we try to follow in this study is the one suggested in 
 this [useful paper](http://science.sciencemag.org/content/347/6228/1314.full). 
 
+For more details about how the analysis is done, please refer to this 
+[jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
+hosted on Github.
+
 The following table summarizes correlation study among features (✔ : 
 done, - : not really relevant). Mind that the study between feature x 
 and y is in position x and y of the table, that is supposed to 

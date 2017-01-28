@@ -241,7 +241,7 @@ function dateChanged() {
 		// no performance chosen = no performance menu created yet
 		selectedPerf = 'speed'; // default performance
 		// Create select menu for performance
-		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
+		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 		$(performanceSelect).replaceAll($('#performance .select'))
 		fillPerformanceSelect();
 	} else { 
@@ -514,7 +514,7 @@ function createPerfChart(raceKeys, keyPerf) {
 		var heShe = "he";
 		if (currentRunner.sex == 'S') heShe = 'she';
 		var paragraph2 = "<p>Check out below the position of " + currentRunner.name 
-			+ " into the <b>speed distribution</b> of all the runners present in this race. " 
+			+ " into the <b>time distribution</b> of all the runners present in this race. " 
 			+ "Note that this is an approximate distribution with only 10 bins, " 
 			+ "and the runner is represented in the middle of the bin to which " 
 			+ heShe + " belongs. </p>";
@@ -953,7 +953,7 @@ function display() {
 		// Display performance + perf select menu
 		$('#outputbox').append("<div id='performance'></div>")
 		$('#performance').append("<h3> Performances:</h3>")
-		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
+		var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 		$('#performance').append(performanceSelect)
 		$('#performance').append("<div class='text'></div>")
 		$('#performance').append("<div class='chart'></div>")
@@ -1002,7 +1002,7 @@ function display() {
 			$('#outputbox').append("<div id='performance'></div>")
 			$('#performance').append("<h3> Performances:</h3>")
 			// Performance menu select
-			var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance factor you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
+			var performanceSelect = "<div class='select'><p id='choosePerf'>Choose a performance you want to display: <select id='perf' onchange='perfChanged();'></select></p></div>"
 			$('#performance').append(performanceSelect)
 			$('#performance').append("<div class='text'></div>")
 			$('#performance').append("<div class='chart'></div>")

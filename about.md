@@ -13,7 +13,7 @@ This project has several goals and challenges :
 
 * retrieve "running" data from [Datasport](https://www.datasport.com), the website
   of a sport event organizer, on which one can find results
-* run exploratory and statistical analysis on this data
+* run statistical analysis on this data
 * build a website to display the results of the previous part, and also to
   propose a more user-friendly way to look at the data than the Datasport
   website itself.
@@ -36,8 +36,8 @@ We are five students currently at EPFL :
 
 ## About the website
 
-We decided to use a Jekyll-powered website hosted on GitHub Pages for the sake
-of simplicity and ease of use.
+We decided to use a Jekyll-powered website hosted on GitHub Pages for its
+simplicity.
 
 We also use several libraries and tools throughout the pages :
 

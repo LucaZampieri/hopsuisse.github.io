@@ -1,42 +1,26 @@
 ---
 layout: page
-title: Exploratory statistics on the full dataset
+title: Exploratory statistics
 permalink: /fullanalysis/
 ---
 
-## Work in progress
-
-The workflow we try to follow in this study is the one suggested in 
-this [useful paper](http://science.sciencemag.org/content/347/6228/1314.full). 
+We present here an exploratory analysis of the full dataset. The workflow we try
+to follow in this study is the one suggested in this [useful
+paper](http://science.sciencemag.org/content/347/6228/1314.full). 
 
 For more details about how the analysis is done, please refer to this 
-[jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
+[Jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
 hosted on Github.
 
-The following table summarizes correlation study among features (✔ : 
-done, - : not really relevant). Mind that the study between feature x 
-and y is in position x and y of the table, that is supposed to 
-symmetric.
+* TOC
+{:toc}
 
-|             | distance   | sex    | age  | time  | pace | race-year | runner | event | weather |
-|:----:       |:----:      | :----: |:----:| :----:|:----:|   :----:  |:----:  |:----: |:----:   |
-|distance     |      -     |        |      |       |      |[✔](#number-of-runners-across-time-by-distance)| || |  
-|sex          |            | -      |      |       |      | [✔](#number-of-runners-across-time-by-sex) |  |  | |
-|age          |            |        |    - |[✔](#statistics-on-performance-vs-age)|      |[✔](#age-across-editions)|          |       | | 
-|time         |            |        |      |  -    |      |         |          |       |[✔](#plot-time-vs-temperature-for-marathons)|
-|pace         |            |        |      |       |  -   |         |          |       |[✔](#plot-pace-vs-temperature)|
-|race-year    |            |        |      |       |      |  -      |          |[✔](#distribution-of-the-number-of-editions-per-race)|         |
-|runner       |            |        |      |       |      |         |   -      |[✔](#distribution-of-the-number-of-runners-per-race)|         |
-|event        |            |        |      |       |      |         |[✔](#distribution-of-the-number-of-races-per-runner)|     - |         |
-|weather      |            |        |      |       |      |         |          |       |    -    |
-
-<br>
-Click on the check marks <font color="red">✔</font> to go directly to 
-the corresponding sections.
 
 ## Note on unique runners
+
 Some runners may have the same name but a different birth years, or live 
-in different places. 
+in different places.
+
 Checking the demographics of few races, we could notice that there are 
 even some namesakes born the same year but with different residence 
 cities. However this does not necessarily mean that there are two 
@@ -49,7 +33,7 @@ unique name - birthday tuples.
 
 ## Statistics across time
 
-# Number of runners across time, by sex
+### Number of runners across time, by sex
 
 The following graph shows the number of runners across time separated 
 by sex. 
@@ -59,7 +43,7 @@ by sex.
 We can observe a clear *increase* in time of the number of participants 
 in the races, for both sex, across all Switzerland. 
 
-# Number of runners across time, by distance
+### Number of runners across time, by distance
 
 The following graph shows the number of runners across time separated 
 by distances of the races. We only consider the most relevant distances, 
@@ -76,7 +60,7 @@ seems to have been:
 
 * a *decrease* for the marathon.
 
-## Distribution of the number of editions per race
+### Distribution of the number of editions per race
 
 The following graph shows the number of races with respect to the 
 number of times these races took place. 
@@ -89,7 +73,7 @@ organized 16 times. Right after, with 15 editions, come 20km de Lausanne,
 Basler Stadtlauf, Frauenfelder, Gurtenclassic - Wabern, Kerzerslauf, and 
 Schweizer Frauenlauf Bern. 
 
-## Age across editions
+### Age across editions
 
 For this study we use the first 20 races with the largest number of 
 runners. 
@@ -97,12 +81,12 @@ runners.
 Select a race: <select id='race' onchange='drawAgesAcrossEditions();'></select>
 <div id="age-popular-races"></div>
 
-After performing an [Mann-Kendall]
-(http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm) test, 
-we conclude that for many of the races analysed, it is not possible to 
-claim a global trend for the runners' mean age, across time. The test 
-is affected by the lack of data points. We have however also obtained 
-some significant results: 
+After performing an
+[Mann-Kendall](http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm)
+test, we conclude that for many of the races analysed, it is not possible to
+claim a global trend for the runners' mean age, across time. The test is
+affected by the lack of data points. We have however also obtained some
+significant results:
 
 * there is an *increase* of the runner's mean age for ASICS Bremgarter 
 Reusslauf, Jungfrau-Marathon and Kerzerslauf; 
@@ -111,7 +95,7 @@ Reusslauf, Jungfrau-Marathon and Kerzerslauf;
 Course de l'Escalade, Hallwilerseelauf, Luzerner Stadtlauf, 
 Morat-Fribourg, Thuner Stadtlauf and Zürcher Silvesterlauf. 
 
-## Statistics on performance VS age
+## Statistics on performance *vs* age
 
 Note that we only consider races with the higher number of runners, and 
 categories with standard running distances: 10km, 20km/half marathon 
@@ -122,7 +106,7 @@ especially when enough data is available. This shape becomes more
 visible with longer distances (full marathon), while it somehow fades 
 out for shorter distances, like 10 km.
 
-# Marathon
+### Marathon
 
 The following graph represents the mean time the runners took to finish 
 a full marathon with respect to the age of the runner, for different 
@@ -131,7 +115,7 @@ races.
 Select a race: <select id='race-42km' onchange='drawTimeWrtAge("42km");'></select>
 <div id="timevsage-42km"></div>
 
-# Half marathon / 20km
+### Half marathon / 20km
 
 The following graph represents the mean time the runners took to finish 
 a half marathon with respect to the age of the runner, for different 
@@ -140,21 +124,24 @@ races.
 Select a race: <select id='race-21km'  onchange="drawTimeWrtAge('21km');"></select>
 <div id="timevsage-21km"></div>
 
-# 10km
+### 10km
 The following graph represents the mean time the runners took to finish 
 a 10km race with respect to the age of the runner, for different races. 
 
 Select a race: <select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
 <div id="timevsage-10km"></div>
 
-# (Plot Time VS Temperature for marathons) **TODO**
+## Statistics on performance *vs* weather
 
-# (Plot Pace VS Temperature) **TODO**
+### (Plot Time VS Temperature for marathons) **TODO**
 
-# (Distribution of the number of runners, per race) **TODO**
+### (Plot Pace VS Temperature) **TODO**
 
-# (Distribution of the number of races, per runner) **TODO**
+## Other
 
+### (Distribution of the number of runners, per race) **TODO**
+
+### (Distribution of the number of races, per runner) **TODO**
 
 
 <script type="text/javascript">

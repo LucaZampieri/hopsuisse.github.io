@@ -4,7 +4,7 @@ title: Lausanne Marathon
 permalink: /lausanne/
 ---
 
-This page focuses on a statistical analysis done on data from *Lausanne Marathon
+This page focuses on the statistical analysis done on data from *Lausanne Marathon
 2016*. 
 
 The data used was parsed from this [Datasport page](https://services.datasport.com/2016/lauf/lamara/). 
@@ -12,48 +12,31 @@ For more details about how the analysis is done, please refer to this
 [jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/lausanne_marathon_analysis.ipynb)
 hosted on Github.
 
-<h2>Table of content</h2>
+## Table of contents
+{: .no_toc}
+
 * Table of content.
 {:toc}
 
-For simplicity and for a more natural visualization, we only consider 
-the three main races of Lausanne marathon: 10km, half marathon and full 
+For simplicity and for a more natural visualization, we only consider the three
+main races (or distances) of Lausanne marathon : 10km, half marathon and full
 marathon.
-
-## Number of runners in each category
-
-In the following bar plot is represented the number of runners in each 
-considered category. 
-
-<div id="bar-cat"></div>
-
-The longer the race, the less participants there are. It was expectable 
-since the effort is higher when the distance is increased. 
-
-## Number of runners for each sex
-
-In the following bar plot is represented the number of runners of each 
-sex, all categories mixed.
-
-<div id="bar-sex"></div>
-
-Consequently, there are gloablly more men than women. 
 
 ## Number of runners by sex and by category
 
-The number of runners by categories is represented in the following pie 
-plot. 'F' stands for 'female' and 'M' stands for male. 21km and 42 km 
-respectively correspond to the half and the full marathon. 
+The following stacked bar chart represents the number of runners for each
+category and for each sex. There are three categories : 10km, 21km and 42 km
+(the last two respectively correspond to the half and the full marathon). 
 
 <div id="countschart"></div>
 
-Most of the runners, males and females, participate to the 10km race. 
-This corresponds to almost half of the total number of runners for these 
-three categories. The less popular race is the full marathon, especially
-for females. This result is expectable since it is physically the 
-hardest one. The big difference seen in the previous section between the 
-number of male and female runners consequently comes mostly from the 
-marathon. 
+The first observation is that there is globally more men than women. Most of the
+runners, males and females, participate to the 10km race.  This corresponds to
+almost half of the total number of runners for these three categories. The less
+popular race is the full marathon, especially for females. This result is
+expectable since it is physically the hardest one. The big difference between
+the number of male and female runners consequently comes mostly from the
+marathon.
 
 ## Age distributions
 
@@ -232,6 +215,7 @@ women pace is significantly *higher* **only** for the marathon.
 function drawCountsChart() {
   var counts = {{ site.data.lausanne_viz.counts | jsonify }}
 
+  /*
   var chartData = []
   for (let key of Object.keys(counts)) {
     chartData.push([key, counts[key]])
@@ -243,6 +227,24 @@ function drawCountsChart() {
       type : 'pie'
     }
   });
+  */
+
+  var menCounts = counts.men
+  var womenCounts = counts.women
+  menCounts.unshift('men')
+  womenCounts.unshift('women')
+  var chart = c3.generate({
+    bindto: '#countschart',
+    data: {
+      x: 'x',
+      columns: [['x','10km','21km','42km'], womenCounts, menCounts],
+      type: 'bar',
+      groups: [['women', 'men']]
+    },
+    axis: {
+      x: {type: 'category'}
+    }
+  })
 
 }
 
@@ -363,7 +365,6 @@ function drawTowns() {
 function drawTimes(distance) {
   // Load data
   var times_data = {{ site.data.lausanne_viz.time_distribution | jsonify}}
-  console.log(times_data)
   
   // Build chart data
   var timesMen = times_data[distance]["men"]
@@ -455,7 +456,6 @@ function drawNumber(what) {
 function drawPaces(sex) {
   // Load data
   var paces_data = {{ site.data.lausanne_viz.pace_distribution | jsonify}}
-  console.log(paces_data)
   
   // Build chart data
   var paces10km = paces_data[sex]["10km"]

@@ -12,19 +12,9 @@ For more details about how the analysis is done, please refer to this
 [jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/lausanne_marathon_analysis.ipynb)
 hosted on Github.
 
-The following table summarizes correlation study among features (✔ : 
-done, - : not really relevant).
-
-|      | category | sex | city | age | time | pace |
-|:----:|:----:|:----:|:----:|:----:|:----:|:----:| 
-| category  |  [✔](#number-of-runners-in-each-category)   | [✔](#number-of-runners-by-sex-and-by-category)    |   -  |  [✔](#age-distribution-by-sex-and-by-category)   | -  | [✔](#paces-distribution-by-category) |
-| sex  |  -   |  [✔](#number-of-runners-for-each-sex)   |   -   |  [✔](#age-distribution-by-sex-and-by-category)| [✔](#times-distribution-by-sex-and-by-category)  | [✔](#times-distribution-by-sex-and-by-category) (equivalent to time VS sex) |
-| city |  -   |   -  |   [✔](#towns-of-residence-of-the-runners)  |    -    |   -  | - |
-| age  |   -  |   -  |   -  |  [✔](#overall-age-distribution)          |  **TODO?** (equivalent to pace VS age)  | **TODO?** |
-
-<br>
-Click on the check marks <font color="red">✔</font> to go directly to 
-the corresponding sections.
+<h2>Table of content</h2>
+* Table of content.
+{:toc}
 
 For simplicity and for a more natural visualization, we only consider 
 the three main races of Lausanne marathon: 10km, half marathon and full 

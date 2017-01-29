@@ -85,7 +85,7 @@ Select a race: <select id='race' onchange='drawAgesAcrossEditions();'></select>
 
 After performing an
 [Mann-Kendall](http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm)
-test, we conclude that for many of the races analysed, it is not possible to
+test (with p-value threshold at 0.05), we conclude that for many of the races analysed, it is not possible to
 claim a global trend for the runners' mean age, across time. The test is
 affected by the lack of data points. We have however also obtained some
 significant results:

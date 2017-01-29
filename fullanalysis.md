@@ -12,6 +12,9 @@ For more details about how the analysis is done, please refer to this
 [Jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
 hosted on Github.
 
+## Table of contents
+{: .no_toc}
+
 * TOC
 {:toc}
 

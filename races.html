@@ -192,12 +192,17 @@ function getTimes(raceDate, raceDistance) {
     for (let key of Object.keys(currentRace.dates)) {
       var mDistData = currentRace.dates[key].distances[raceDistance]
       if (mDistData) {
-        var mTimes = mDistData.times
-        times[key] = mTimes
+        var mTimesM = mDistData.times['M']
+        var mTimesF = mDistData.times['F']
+        times[key] = {}
+        times[key]['M'] = mTimesM
+        times[key]['F'] = mTimesF
       }
     }
   } else {
-    times[raceDate] = currentRace.dates[raceDate].distances[raceDistance].times
+    times[raceDate] = {}
+    times[raceDate]['M'] = currentRace.dates[raceDate].distances[raceDistance].times['M']
+    times[raceDate]['F'] = currentRace.dates[raceDate].distances[raceDistance].times['F']
   }
   return times
 }
@@ -213,68 +218,84 @@ function drawTimeHistogram() {
 
   // Create bins and counts
   var numBins = 10
-  allTimes = []
-  for (let key of Object.keys(times)) {
-    allTimes = allTimes.concat(times[key])
-  }
-  var bins = linspace(allTimes, numBins, true)
+  var bins
   var counts = []
-  for (let key of Object.keys(times)) {
-    var mCounts = valueCounts(times[key], bins, true)
-    // Build string date
-    dateAttr = currentRace.dates[key]
-    strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year
-    mCounts.unshift(strDate)
-    counts.push(mCounts)
+  
+  if (mDate == 'all') {
+	  var allTimes = []
+	  for (let key of Object.keys(times)) {
+		allTimes = allTimes.concat(times[key]['F']).concat(times[key]['M'])
+	  }
+	  bins = linspace(allTimes, numBins, true)
+	  for (let key of Object.keys(times)) {
+		var mCounts = valueCounts(times[key]['F'].concat(times[key]['M']), bins, true)
+		// Build string date
+		dateAttr = currentRace.dates[key]
+		strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year
+		mCounts.unshift(strDate)
+		counts.push(mCounts)
+	  }
+  } else {
+	  var allTimes = times[mDate]['M']
+	  var allTimesF = times[mDate]['F']
+	  bins = linspace(allTimes.concat(allTimesF), numBins, true)
+	  var mCounts = valueCounts(times[mDate]['M'], bins, true)
+	  var mCountsF = valueCounts(times[mDate]['F'], bins, true)
+	  // Build string date
+	  // dateAttr = currentRace.dates[mDate]
+	  // strDate = dateAttr.day +'/'+ dateAttr.month +'/'+ dateAttr.year
+	  mCounts.unshift('Men')
+	  mCountsF.unshift('Women')
+	  counts.push(mCounts)
+	  counts.push(mCountsF)
   }
+	  // Make bin ticks
+	  binTicks = makeBinTicks(bins)
 
-  // Make bin ticks
-  binTicks = makeBinTicks(bins)
-
-  // Draw chart
-  var chart = c3.generate({
-    bindto: '#times .chart',
-    data: {
-      columns: counts,
-      type: 'spline',
-    },
-    point: {
-      show: false
-    },
-    axis: {
-      x: {
-        label: {text:'Time',position:'outer-center'},
-        type: 'category',
-        categories: binTicks,
-        tick: {
-          format: function(i) {
-            return secondsToTime(binTicks[i].split(' - ')[0])
-          }
-        }
-      },
-      y: {
-        label: 'Number of runners'
-      }
-    },
-    tooltip: {
-      show: false,
-      grouped: true,
-      format: {
-        title: function(i) {
-          var left = binTicks[i].split(' - ')[0]
-          var right = binTicks[i].split(' - ')[1]
-          return secondsToTime(left) + ' - ' + secondsToTime(right) 
-        },
-      }
-    },
-    transition: {
-      duration: 0
-    },
-    onrendered: function() {
-      // HOTFIX for ticks position...
-      $('#times .chart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
-    }
-  })
+	  // Draw chart
+	  var chart = c3.generate({
+		bindto: '#times .chart',
+		data: {
+		  columns: counts,
+		  type: 'spline',
+		},
+		point: {
+		  show: false
+		},
+		axis: {
+		  x: {
+			label: {text:'Time',position:'outer-center'},
+			type: 'category',
+			categories: binTicks,
+			tick: {
+			  format: function(i) {
+				return secondsToTime(binTicks[i].split(' - ')[0])
+			  }
+			}
+		  },
+		  y: {
+			label: 'Number of runners'
+		  }
+		},
+		tooltip: {
+		  show: false,
+		  grouped: true,
+		  format: {
+			title: function(i) {
+			  var left = binTicks[i].split(' - ')[0]
+			  var right = binTicks[i].split(' - ')[1]
+			  return secondsToTime(left) + ' - ' + secondsToTime(right) 
+			},
+		  }
+		},
+		transition: {
+		  duration: 0
+		},
+		onrendered: function() {
+		  // HOTFIX for ticks position...
+		  $('#times .chart .c3-axis-x .tick text').attr('transform', 'translate(-35,0)')
+		}
+	  })
 }
 
 function getGenderCounts(raceDate, raceDistance) {
@@ -475,8 +496,9 @@ function loadAndDisplay(encodedName) {
     $('#times').append("<div class='text'></div>")
     $('#times').append("<div class='chart'></div>")
     var timesTitle = "<h4>Times distribution</h4>"
-    var timesText = "<p>Distribution of achieved times for this race, date and distance selection.</p>"
-    $('#times .text').append(timesTitle)
+    var timesText = "<p>Distribution of achieved times for this race, date and distance selection." 
+		+ "<br>Click or unclick the legend items to only show the desired features.</p>"
+    $('#times .text').append(timesTitle) 
     $('#times .text').append(timesText)
     drawTimeHistogram()
     

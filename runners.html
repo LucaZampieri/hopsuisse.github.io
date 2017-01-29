@@ -5,6 +5,7 @@ permalink: /runners/
 ---
 
 <div id="searchfield">
+
   <h3>Search for a runner... <a id="randomlink" onmouseover="this.style.cursor = 'pointer'" onclick="displayRandom();">or
 feel lucky !</a></h3>
   <form>
@@ -25,9 +26,11 @@ feel lucky !</a></h3>
 	var runners = null;
 	var currentRunner = null;
 	var allRacesObject = {};
+	var allRacesNames = {};
 </script>
 
 <script type="text/javascript">
+//<div class="se-pre-con"></div>
 
 /* Randomly choose a runner from the dataset and display its info */
 function displayRandom() {
@@ -45,13 +48,8 @@ function displayRandom() {
  * - the encoded race name
  */
 function encodeName(name) {
-	function toLower(str) {
-		return str.toLowerCase();
-	}
-	return name.replace(/[^0-9a-zA-Z+]/g, '').replace(/[A-Z]/g, toLower);
+	return allRacesNames[name];
 }
-
-
 
 // ----------------------------- MAPS ------------------------------ //
 /* Draw a map of Switzerland with pointers where a runner has done a 
@@ -184,7 +182,7 @@ function drawMap() {
 // --------------- MENU SELECTS -------------------- //
 /* Callback function for race selection */
 function raceChanged() {
-	console.log(currentRunner)
+	//console.log(currentRunner)
 	// Get selected racekey
 	var selectedRace = $("#race").val();
 	if (!selectedRace || selectedRace == ' ') {
@@ -855,20 +853,24 @@ function getTimes(keyRace, raceDate, raceCategory) {
  * Params :
  * - encodedName : string, name of the JSON file of the selected runner
  */
-function loadAndDisplay(encodedName) {	
-	allRacesObject = {};
-	
-	// Load JSON data corresponding to the selected runner
-	$.getJSON("../runnerdata/" + encodedName + ".json", function(data) {
-		console.log(data)
-		// Set 'global' var to selected runner
-		currentRunner = data
+function loadAndDisplay(encodedName) {
+	$.getJSON("../filenames/racesnames.json", function(allRaces) {
+		// swap the dictionary to runner's name --> JSON file name
+		allRacesNames = swapDict(allRaces);
+		allRacesObject = {};
 		
-		// Load JSON data corresponding to all the races attended by 
-		// the selected runner
-		var racesLeft = Object.keys(currentRunner.races);
-		loadRaceJSONAndDisplay(racesLeft);
-	})
+		// Load JSON data corresponding to the selected runner
+		$.getJSON("../runnerdata/" + encodedName + ".json", function(data) {
+			//console.log(data)
+			// Set 'global' var to selected runner
+			currentRunner = data
+			
+			// Load JSON data corresponding to all the races attended by 
+			// the selected runner
+			var racesLeft = Object.keys(currentRunner.races);
+			loadRaceJSONAndDisplay(racesLeft);
+		})
+	});
 }
 
 /* Recursive function: load JSON files corresponding to all the races  
@@ -906,14 +908,9 @@ function loadRaceJSONAndDisplay(racesLeft) {
  * and the different options proposed to the website user. 
  */
 function display() {
-	console.log(allRacesObject)
+	//console.log(allRacesObject)
 	// Empty HTML
 	$('#outputbox').empty()
-	
-	//$('#oubputbox').append('<div id="loading"></div>')
-	//$(window).ready(function() {
-	//	$('#loading').hide();
-	//});
 	
 	// Title and personal information
 	var today = new Date();
@@ -1057,11 +1054,25 @@ function swap(json){
 	return ret;
 }
 
+function swapDict(json){
+  var ret = {};
+  for(var key in json){
+    ret[json[key]] = key;
+  }
+  return ret;
+}
+
 
 
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for runner selection through search bar */
 $(function(){
+	/* // Wait for window load
+	$(window).on('load', function() {
+		// Animate loader off screen
+		$("#se-pre-con").fadeOut("slow");
+	}); */
+
 	// opens the JSON file corresponding to the dictionary runner's JSON
 	// file name -> runner's name
 	$.getJSON("../filenames/runnersnames.json", function(allRunners) {
@@ -1077,5 +1088,6 @@ $(function(){
 			}
 		});
 	});
+	
 }); 
 </script>

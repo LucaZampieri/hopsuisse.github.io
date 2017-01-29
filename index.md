@@ -17,4 +17,4 @@ Analysis and visualization of running data from [Datasport](http://datasport.com
 [![full dataset](images/glyphicons-43-pie-chart.png) Study the whole dataset](/fullanalysis){:.home-nav}
 [![runners](images/glyphicons-592-person-running.png) Explore runners data](/runners){:.home-nav}
 [![races](images/glyphicons-503-map.png) Explore races data](/races){:.home-nav}
-
+[![about](images/glyphicons-498-glasses.png) Learn more about the project](/about){:.home-nav}

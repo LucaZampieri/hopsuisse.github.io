@@ -426,7 +426,10 @@ function createPerfChart(raceKeys, keyPerf) {
 			axis: {
 				x: {
 					type: 'category',
-					label: { show: false },
+					label: {
+						text: 'Races ordered chronologically (pass the mouse over the graph for more information)',
+						position: 'outer-right'
+					},
 					tick: {
 						format: function(i) {
 							return fullRacesDesc[i];
@@ -441,8 +444,12 @@ function createPerfChart(raceKeys, keyPerf) {
 				}
 			},
 			onrendered: function() {
-				// hotfix for ticks position
-				$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(0,-20)')
+				if (chartPerf.length > 5) {
+					$('#performance .chart .c3-axis-x .tick').css('display', 'none')
+				} else {
+					$('#performance .chart .c3-axis-x .tick text').attr('transform', 'translate(0,-20)')
+					$('#performance .chart .c3-axis-x .label').attr('show', false)
+				}
 			}
 		});
 		

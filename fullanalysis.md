@@ -12,6 +12,24 @@ For more details about how the analysis is done, please refer to this
 [Jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
 hosted on Github.
 
+### An overview in video
+
+We first try to give an overwiew of the data in video, following the approach of
+this great example : [200 Countries, 200 Years, 4
+Minutes](https://youtu.be/jbkSRLYSojo). Here, we use the format to display
+jointly :
+* the pace (on the Y axis),
+* the experience of the runners (*ie.* whether they are beginners or experts, on
+  the X axis),
+* different races and their number of competitors (dots and their size),
+* the runners sex (with colors),
+* the runners age.
+
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KzeR-H7_xlE"
+frameborder="0" allowfullscreen></iframe>
+</center>
+
 ## Table of contents
 {: .no_toc}
 
@@ -135,18 +153,6 @@ a 10km race with respect to the age of the runner, for different races.
 
 Select a race: <select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
 <div id="timevsage-10km"></div>
-
-## Statistics on performance *vs* weather
-
-### (Plot Time VS Temperature for marathons) **TODO**
-
-### (Plot Pace VS Temperature) **TODO**
-
-## Other
-
-### (Distribution of the number of runners, per race) **TODO**
-
-### (Distribution of the number of races, per runner) **TODO**
 
 
 <script type="text/javascript">

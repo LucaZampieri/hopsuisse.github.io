@@ -11,8 +11,8 @@ Analysis](https://adaepfl.github.io) course at [EPFL](https://epfl.ch).
 
 This project has several goals and challenges :
 
-* retrieve "running" data from [Datasport](https://www.datasport.com), the website
-  of a sport event organizer, on which one can find results
+* retrieve "running" data from [Datasport](https://www.datasport.com), the
+  website of a service provider for sport events, on which one can find results
 * run statistical analysis on this data
 * build a website to display the results of the previous part, and also to
   propose a more user-friendly way to look at the data than the Datasport

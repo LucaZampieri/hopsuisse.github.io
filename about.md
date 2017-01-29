@@ -28,11 +28,11 @@ started quickly.
 
 We are five students currently at EPFL :
 
-* Ondine Chanon
-* Antonio Iubatti
-* Gianrocco Lazzari
-* Maxime Peschard
-* Stefano Savarè
+* [Ondine Chanon](https://github.com/ochanon)
+* [Antonio Iubatti](https://github.com/antonioiubatti93)
+* [Gianrocco Lazzari](https://github.com/ggrrll)
+* [Maxime Peschard](https://github.com/maximepeschard)
+* [Stefano Savarè](https://github.com/deatinor)
 
 ## About the website
 
@@ -47,3 +47,8 @@ We also use several libraries and tools throughout the pages :
 * [Google Fonts](https://fonts.google.com)
 * [Glyphicons Free](https://glyphicons.com)
 * [Weather Icons](https://erikflowers.github.io/weather-icons/)
+
+## About the title
+
+"Hop Suisse !" is the support slogan for Swiss athletes and teams during sport
+events. It can roughly be translated as "Go Switzerland !" :-)

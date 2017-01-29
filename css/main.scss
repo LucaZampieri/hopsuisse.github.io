@@ -1,26 +1,35 @@
-/* GLOBAL */
+---
+---
+
+/* Website colors */
+$hopsuisse-red: #bb1624;
+$hopsuisse-light-gray: #f1f1f1;
+$hopsuisse-gray: #e1e1e1;
+$hopsuisse-medium-gray: #aeaeae;
+$hopsuisse-dark-gray: #666666;
+
+/* Global style */
 .site-header {
-  border-top: 5px solid #da291c;
+  border-top: 5px solid $hopsuisse-red;
 }
 a, a:visited {
-  color: #da291c;
+  color: $hopsuisse-red;
 }
 
-/* HOME STYLE */
+/* Home style */
 .home {
   text-align: center;
   font-size: x-large;
 }
 .home h1 {
-  color: gray;
+  color: $hopsuisse-dark-gray;
 }
 .home a {
-  color: #da291c;
+  color: $hopsuisse-red;
 }
-
 .home-nav {
   display: inline-block;
-  background-color: #f1f1f1;
+  background-color: $hopsuisse-light-gray;
   height: 40px;
   width: 100%;
   margin-top: 10px;
@@ -31,16 +40,16 @@ a, a:visited {
   opacity: 0.5;
 }
 .home-nav:hover {
-  background-color: #e1e1e1;
+  background-color: $hopsuisse-gray;
   text-decoration: none;
 }
 
-/* AUTOCOMPLETE STYLE */
+/* Autocomplete style */
 #randomlink {
   cursor: pointer;
 }
 .autocomplete-suggestions {
-  border: 1px solid #999;
+  border: 1px solid $hopsuisse-gray;
   background: #fff;
   cursor: default;
   overflow: auto;
@@ -52,11 +61,11 @@ a, a:visited {
   overflow: hidden;
 }
 .autocomplete-selected {
-  background: #f0f0f0;
+  background: $hopsuisse-light-gray;
 }
 .autocomplete-suggestions strong {
   font-weight: normal;
-  color: #da291c;
+  color: $hopsuisse-red;
 }
 #searchfield {
   margin: 0;
@@ -79,7 +88,7 @@ a, a:visited {
   background-color: #fff;
   border: 1px solid #c8c8c8;
   border-radius: 3px;
-  color: #aeaeae;
+  color: $hopsuisse-medium-gray;
   font-weight:normal;
   font-size: 1.5em;
   -webkit-transition: all 0.2s linear;
@@ -90,10 +99,9 @@ a, a:visited {
   color: #858585;
 }
 
-/* OUTPUT STYLE */
+/* Charts and outputs style */
 #outputbox div {
   margin-top: 20px;
-  /*margin-bottom: 10px;*/
 }
 
 #globaldesc .text {
@@ -106,7 +114,6 @@ div#map {
   width: 65%;
   height: 250px;
 }
-
 #weather {
   display: inline-block;
   vertical-align: top;
@@ -117,8 +124,8 @@ div#map {
   width: 50%;
   height: 250px;
 }
-
-select#date, select#distance, select#perf {
+select#date, select#distance, select#perf, select#race, select#race-42km,
+select#race-21km, select#race-10km {
   width: 20%;
   height: 30px;
   padding: 6px;
@@ -127,8 +134,8 @@ select#date, select#distance, select#perf {
   margin-left: 0;
   font-size: medium;
   font-family: 'Inconsolata', monospace;
-  color: #666666;
-  background: #f1f1f1 url('https://cdn3.iconfinder.com/data/icons/google-material-design-icons/48/ic_keyboard_arrow_down_48px-128.png') no-repeat;
+  color: $hopsuisse-dark-gray;
+  background: $hopsuisse-light-gray url('https://cdn3.iconfinder.com/data/icons/google-material-design-icons/48/ic_keyboard_arrow_down_48px-128.png') no-repeat;
   background-size: 20px;
   background-position:  right 10px center;
   border:none;
@@ -138,28 +145,12 @@ select#date, select#distance, select#perf {
   -moz-appearance:none;
   appearance:none;
 }
-
+select#date, select#distance, select#perf {
+  width: 20%;
+}
 select#race, select#race-42km, select#race-21km, select#race-10km {
   width: 45%;
-  height: 30px;
-  padding: 6px;
-  padding-left: 10px;
-  margin: 10px;
-  margin-left: 0;
-  font-size: medium;
-  font-family: 'Inconsolata', monospace;
-  color: #666666;
-  background: #f1f1f1 url('https://cdn3.iconfinder.com/data/icons/google-material-design-icons/48/ic_keyboard_arrow_down_48px-128.png') no-repeat;
-  background-size: 20px;
-  background-position:  right 10px center;
-  border:none;
-  outline:none;
-  display: inline-block;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  appearance:none;
 }
-
 .bigwi {
   width: 100%;
   padding-top: 20px;
@@ -168,7 +159,6 @@ select#race, select#race-42km, select#race-21km, select#race-10km {
   color: #d1d1d1;
 }
 
-/* CHARTS (GLOBAL) */
 .c3-grid .c3-ygrid {
   stroke: #d7d7d7;
   stroke-width: 2px;
@@ -183,14 +173,12 @@ g.tick {
   font-size: small;
 }
 
-/* PARTICIPATION TRENDS CHART */
 #participation, #weather {
   padding-top: 1px;
   padding-left: 10px;
   padding-right: 20px;
-  background-color: #f1f1f1;
+  background-color: $hopsuisse-light-gray;
 }
-
 #participation .chart .c3-axis-x .tick line {
   stroke: #d7d7d7;
   stroke-width: 2px;
@@ -211,19 +199,17 @@ g.tick {
   text-align: center;
 }
 
-/* Table markdown */
+/* Tables */
 table{
     border-collapse: collapse;
     border-spacing: 0;
-    border:2px solid #000000;
+    border: 2px solid $hopsuisse-medium-gray;
     width: 100%;
 }
-
 th{
-    border:1px solid #000000;
+    border: 1px solid $hopsuisse-medium-gray;
 }
-
 td{
-    border:1px solid #000000;
+    border: 1px solid $hopsuisse-medium-gray;
 }
 

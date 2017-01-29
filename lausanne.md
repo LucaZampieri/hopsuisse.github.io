@@ -212,27 +212,16 @@ women pace is significantly *higher* **only** for the marathon.
 
 <script type="text/javascript">
 
+/* Draw chart to display runners count by sex and category */
 function drawCountsChart() {
+  // Get data
   var counts = {{ site.data.lausanne_viz.counts | jsonify }}
-
-  /*
-  var chartData = []
-  for (let key of Object.keys(counts)) {
-    chartData.push([key, counts[key]])
-  }
-  var chart = c3.generate({
-    bindto: '#countschart',
-    data: {
-      columns: chartData,
-      type : 'pie'
-    }
-  });
-  */
-
+  // Prepare data for C3.js
   var menCounts = counts.men
   var womenCounts = counts.women
   menCounts.unshift('men')
-  womenCounts.unshift('women')
+  womenCounts.unshift('women') 
+  // Generate the chart
   var chart = c3.generate({
     bindto: '#countschart',
     data: {
@@ -245,17 +234,18 @@ function drawCountsChart() {
       x: {type: 'category'}
     }
   })
-
 }
 
+/* Draw the distribution of runners ages */
 function drawOverallAgeDistribution() {
+  // Get data
   var age_distribution = {{ site.data.lausanne_viz.age_distribution | jsonify }}
-
+  // Prepare data for C3.js
   var ages = age_distribution.overall.ages
   ages.unshift('ages')
   var counts = age_distribution.overall.counts
   counts.unshift('fraction')
-
+  // Generate the chart
   var chart = c3.generate({
     bindto: '#agedistriboverall',
     data: {
@@ -278,9 +268,11 @@ function drawOverallAgeDistribution() {
   })
 }
 
+/* Draw the distributions of runners ages for a specific gender, by category */
 function drawAgeDistribution(sex, bindName) {
+  // Get data
   var age_distribution = {{ site.data.lausanne_viz.age_distribution | jsonify }}
-  
+  // Prepare data for C3.js
   var ages10km = age_distribution[sex]['10km'].ages
   var ages21km = age_distribution[sex]['21km'].ages
   var ages42km = age_distribution[sex]['42km'].ages
@@ -293,7 +285,7 @@ function drawAgeDistribution(sex, bindName) {
   counts10km.unshift('10km')
   counts21km.unshift('21km')
   counts42km.unshift('42km')
-
+  // Generate the chart
   var chart = c3.generate({
     bindto: bindName,
     data: {
@@ -322,19 +314,22 @@ function drawAgeDistribution(sex, bindName) {
   })
 }
 
-var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+/* Helper function for log plots ticks */
 function formatPower(d) { 
-	return (d + "").split("").map(function(c) { return superscript[c]; })
+  var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  return (d + "").split("").map(function(c) { return superscript[c]; })
 }
 
+/* Draw #towns vs #runners/town */
 function drawTowns() {
+  // Get data
   var towns = {{ site.data.lausanne_viz.towns | jsonify }}
+  // Prepare data for C3.js
   var numRunnersLog = towns.num_runners.map(Math.log10)
   var numTownsLog = towns.num_towns.map(Math.log10)
-
   numRunnersLog.unshift('num runners')
   numTownsLog.unshift('num towns')
-  
+  // Generate the chart
   var chart = c3.generate({
     bindto: '#townschart',
     data: {
@@ -358,15 +353,16 @@ function drawTowns() {
         label: 'Number of towns'
       }
     },
-    legend: {show: false}
+    legend: {show: false},
+    tooltip: {show: false}
   })
 }
 
+/* Draw male and female time distributions for a specific distance */
 function drawTimes(distance) {
-  // Load data
+  // Get data
   var times_data = {{ site.data.lausanne_viz.time_distribution | jsonify}}
-  
-  // Build chart data
+  // Prepare data for C3.js
   var timesMen = times_data[distance]["men"]
   var timesWomen = times_data[distance]["women"]
   var numBins = 10
@@ -375,11 +371,9 @@ function drawTimes(distance) {
   var countsWomen = valueCounts(timesWomen, bins, true).map(function(x){return x / timesWomen.length})
   countsMen.unshift('men')
   countsWomen.unshift('women')
-
   // Make bin ticks
   binTicks = makeBinTicks(bins)
-
-  // Draw chart
+  // Generate the chart
   var chart = c3.generate({
     bindto: '#times-'+distance,
     data: { columns: [countsMen, countsWomen], type: 'spline' },
@@ -453,11 +447,11 @@ function drawNumber(what) {
 	});
 }
 
+/* Draw paces distribution for a specific gender */
 function drawPaces(sex) {
-  // Load data
+  // Get data
   var paces_data = {{ site.data.lausanne_viz.pace_distribution | jsonify}}
-  
-  // Build chart data
+  // Prepare data for C3.js
   var paces10km = paces_data[sex]["10km"]
   var paces21km = paces_data[sex]["21km"]
   var paces42km = paces_data[sex]["42km"]
@@ -469,11 +463,9 @@ function drawPaces(sex) {
   counts10km.unshift('10km')
   counts21km.unshift('21km')
   counts42km.unshift('42km') 
-
   // Make bin ticks
   binTicks = makeBinTicks(bins)
-
-  // Draw chart
+  // Generate the chart
   var chart = c3.generate({
     bindto: '#paces-'+sex,
     data: { columns: [counts10km, counts21km, counts42km], type: 'spline' },
@@ -500,8 +492,8 @@ function drawPaces(sex) {
   
 }
 
-drawNumber('cat')
-drawNumber('sex')
+//drawNumber('cat')
+//drawNumber('sex')
 drawCountsChart()
 drawOverallAgeDistribution()
 drawAgeDistribution('women', '#agedistribwomen')

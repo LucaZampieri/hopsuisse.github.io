@@ -4,6 +4,8 @@ title: Runners
 permalink: /runners/
 ---
 
+<div class="se-pre-con"></div>
+
 <div id="searchfield">
 
   <h3>Search for a runner... <a id="randomlink" onmouseover="this.style.cursor = 'pointer'" onclick="displayRandom();">or
@@ -16,10 +18,6 @@ feel lucky !</a></h3>
   </form>
 </div>
 
-<div id="outputbox">
-  <p id="outputcontent">Choose a runner and the results will be displayed here.</p>
-</div>
-
 <script type="text/javascript">
 	// Global variables
 	var myMap = null;
@@ -29,9 +27,11 @@ feel lucky !</a></h3>
 	var allRacesNames = {};
 </script>
 
-<script type="text/javascript">
-//<div class="se-pre-con"></div>
+<div id="outputbox">
+  <p id="outputcontent">Choose a runner and the results will be displayed here.</p>
+</div>
 
+<script type="text/javascript">
 /* Randomly choose a runner from the dataset and display its info */
 function displayRandom() {
   // Get random index
@@ -860,7 +860,10 @@ function getTimes(keyRace, raceDate, raceCategory) {
  * Params :
  * - encodedName : string, name of the JSON file of the selected runner
  */
+
 function loadAndDisplay(encodedName) {
+	$("<div id='outputbox'><p id='outputcontent'>Loading... Please wait.</p><img src='../images/CHflag.gif' align='middle' style='width: 8%; height: 16%'></div>").replaceAll("#outputbox")
+	
 	$.getJSON("../filenames/racesnames.json", function(allRaces) {
 		// swap the dictionary to runner's name --> JSON file name
 		allRacesNames = swapDict(allRaces);
@@ -875,6 +878,7 @@ function loadAndDisplay(encodedName) {
 			// Load JSON data corresponding to all the races attended by 
 			// the selected runner
 			var racesLeft = Object.keys(currentRunner.races);
+			
 			loadRaceJSONAndDisplay(racesLeft);
 		})
 	});
@@ -904,6 +908,7 @@ function loadRaceJSONAndDisplay(racesLeft) {
 		// race in the list.
 		racesLeft.pop();
 		if (racesLeft.length == 0) {
+			$('<div id="outputbox"><p id="outputcontent">Choose a runner and the results will be displayed here.</p></div>').replaceAll('#outputbox')
 			display();
 		} else {
 			loadRaceJSONAndDisplay(racesLeft);
@@ -1074,11 +1079,11 @@ function swapDict(json){
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for runner selection through search bar */
 $(function(){
-	/* // Wait for window load
+	// Wait for window load
 	$(window).on('load', function() {
 		// Animate loader off screen
-		$("#se-pre-con").fadeOut("slow");
-	}); */
+		$(".se-pre-con").fadeOut("slow");
+	});
 
 	// opens the JSON file corresponding to the dictionary runner's JSON
 	// file name -> runner's name
@@ -1091,9 +1096,13 @@ $(function(){
 			lookup: runners,
 			lookupLimit: 6,
 			onSelect: function (suggestion) {
+				$(window).on('load', function() {
+					// Animate loader off screen
+					$(".se-pre-con").fadeOut("slow");
+				});
 				loadAndDisplay(suggestion.data);
 			}
-		});
+		}); 
 	});
 	
 }); 

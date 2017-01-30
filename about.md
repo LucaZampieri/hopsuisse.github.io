@@ -20,9 +20,12 @@ This project has several goals and challenges :
 
 The data and the different steps for scraping and analyzing the data can be
 found [on this GitHub
-repository](https://github.com/ggrrll/hop_suisse_ada_project_public). We mainly
-used Jupyter notebooks and plot libs such as Matplotlib and Seaborn to get
-started quickly.
+repository](https://github.com/ggrrll/hop_suisse_ada_project_public). Note that
+the repository contains extra content not displayed on this website, mostly in
+[this
+directory](https://github.com/ggrrll/hop_suisse_ada_project_public/tree/master/6-data_analysis),
+we invite the interested reader to check it. We mainly used Jupyter notebooks
+and plot libs such as Matplotlib and Seaborn to get started quickly.
 
 ## About the team
 

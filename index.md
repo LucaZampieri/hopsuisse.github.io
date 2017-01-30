@@ -6,7 +6,7 @@ layout: home
 exclude: true
 ---
 
-![:runner:](images/runner_emoji.png)
+![:runner:](images/runners2.jpg)
 
 # Dive into running data in Switzerland
 

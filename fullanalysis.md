@@ -8,8 +8,8 @@ We present here an exploratory analysis of the full dataset. The workflow we try
 to follow in this study is the one suggested in this [useful
 paper](http://science.sciencemag.org/content/347/6228/1314.full). 
 
-For more details about how the analysis is done, please refer to this 
-[Jupyter notebook](https://github.com/maximepeschard/hop_suisse/blob/master/data_analysis/exploratory_full_sport_dataset.ipynb) 
+For more details about how the analysis is done, please refer to this [Jupyter
+notebook](https://nbviewer.jupyter.org/github/ggrrll/hop_suisse_ada_project_public/blob/master/6-data_analysis/exploratory_full_sport_dataset.ipynb)
 hosted on Github.
 
 ### An overview in video

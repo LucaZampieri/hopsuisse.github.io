@@ -4,7 +4,10 @@ title: Runners
 permalink: /runners/
 ---
 
-<div class="se-pre-con"></div>
+<div id='loader'>
+	<p id='outputcontent'>Loading... Please wait.</p>
+	<img src='../images/CHflag.gif'>
+</div>
 
 <div id="searchfield">
 
@@ -1079,17 +1082,12 @@ function swapDict(json){
 // -------------------- MAIN CALLBACK FUNCTION --------------------- //
 /* Callback function for runner selection through search bar */
 $(function(){
-	// Wait for window load
-	$(window).on('load', function() {
-		// Animate loader off screen
-		$(".se-pre-con").fadeOut("slow");
-	});
-
 	// opens the JSON file corresponding to the dictionary runner's JSON
 	// file name -> runner's name
 	$.getJSON("../filenames/runnersnames.json", function(allRunners) {
 		// swap the dictionary to runner's name --> JSON file name
 		runners = swap(allRunners);
+		$("#loader").remove();
 		// on select value of the autocomplete = runner selection
 		$('#autocomplete').autocomplete({ 
 			delay: 0,

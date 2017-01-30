@@ -425,13 +425,14 @@ function displayWeather() {
 }
 
 function loadAndDisplay(encodedName) {
+  $("<div id='outputbox'><p id='outputcontent'>Loading... Please wait.</p><img src='../images/CHflag.gif' align='middle' style='width: 8%; height: 16%'></div>").replaceAll("#outputbox")
   // Load JSON data
-  $.getJSON("/racedata/" + encodedName + ".json", function(data) {
-    console.log(data)
-    
+  $.getJSON("/racedata/" + encodedName + ".json", function(data) {    
     // Set 'global' var to selected race
     currentRace = data
-
+	
+	$('<div id="outputbox"><p id="outputcontent">Choose a runner and the results will be displayed here.</p></div>').replaceAll('#outputbox')
+	
     // Empty HTML
     $('#outputbox').empty()
 

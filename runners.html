@@ -1096,10 +1096,6 @@ $(function(){
 			lookup: runners,
 			lookupLimit: 6,
 			onSelect: function (suggestion) {
-				$(window).on('load', function() {
-					// Animate loader off screen
-					$(".se-pre-con").fadeOut("slow");
-				});
 				loadAndDisplay(suggestion.data);
 			}
 		}); 

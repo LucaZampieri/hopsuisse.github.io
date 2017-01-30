@@ -18,6 +18,7 @@ We first try to give an overwiew of the data in video, following the approach of
 this great example : [200 Countries, 200 Years, 4
 Minutes](https://youtu.be/jbkSRLYSojo). Here, we use the format to display
 jointly :
+
 * the pace (on the Y axis),
 * the experience of the runners (*ie.* whether they are beginners or experts, on
   the X axis),

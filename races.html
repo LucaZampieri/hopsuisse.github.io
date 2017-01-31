@@ -223,11 +223,12 @@ function drawTimeHistogram() {
   
   if (mDate == 'all') {
 	  var allTimes = []
-	  for (let key of Object.keys(times)) {
+	  var orderedKeys = Object.keys(times).sort((a, b) => a.split(".")[a.split(".").length-1] - b.split(".")[b.split(".").length-1])
+	  for (let key of orderedKeys) {
 		allTimes = allTimes.concat(times[key]['F']).concat(times[key]['M'])
 	  }
 	  bins = linspace(allTimes, numBins, true)
-	  for (let key of Object.keys(times)) {
+	  for (let key of orderedKeys) {
 		var mCounts = valueCounts(times[key]['F'].concat(times[key]['M']), bins, true)
 		// Build string date
 		dateAttr = currentRace.dates[key]
@@ -258,6 +259,7 @@ function drawTimeHistogram() {
 		data: {
 		  columns: counts,
 		  type: 'spline',
+		  order: 'asc'
 		},
 		point: {
 		  show: false
@@ -369,11 +371,15 @@ function drawParticipationChart() {
     axis: {
       x: {
         type: 'timeseries',
-        tick: {format: '%Y'}
+        tick: {format: '%Y'},
+        label: {text:'Year',position:'outer-center'}	
       }
     },
     grid: {
-      y: {show: true}
+      y: {
+		  show: true,
+		  label: {text:'Number of runners',position:'outer-right'}
+	  }
     },
     legend: { show: false },
     onrendered: function() {

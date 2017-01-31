@@ -31,6 +31,16 @@ jointly :
 frameborder="0" allowfullscreen></iframe>
 </center>
 
+Conclusions on this video: 
+
+* Young runners run on shorter distances; 
+* Men pace is always a bit lower than women pace;
+* Pace is higher for very young and old runners, with a minimum around 20 years old;
+* There are lots of new young runners (<12 years old) for low distance races, but most of the 
+  new runners are between 15 and 25 years old.
+* The number of new runners decreases with the age, together with the total number of runners 
+  of a certain age. 
+
 ## Table of contents
 {: .no_toc}
 

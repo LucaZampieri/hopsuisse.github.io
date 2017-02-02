@@ -142,7 +142,7 @@ out for shorter distances, like 10 km.
 
 ### Marathon
 
-The following graph represents the mean time the runners took to finish 
+The following graph represents the median time the runners took to finish 
 a full marathon with respect to the age of the runner, for different 
 races. 
 
@@ -151,7 +151,7 @@ Select a race: <select id='race-42km' onchange='drawTimeWrtAge("42km");'></selec
 
 ### Half marathon / 20km
 
-The following graph represents the mean time the runners took to finish 
+The following graph represents the median time the runners took to finish 
 a half marathon with respect to the age of the runner, for different 
 races. 
 
@@ -159,7 +159,7 @@ Select a race: <select id='race-21km'  onchange="drawTimeWrtAge('21km');"></sele
 <div id="timevsage-21km"></div>
 
 ### 10km
-The following graph represents the mean time the runners took to finish 
+The following graph represents the median time the runners took to finish 
 a 10km race with respect to the age of the runner, for different races. 
 
 Select a race: <select id='race-10km' onchange="drawTimeWrtAge('10km');"></select>
@@ -307,7 +307,7 @@ function drawTimeWrtAge(km) {
 		}, 
 		axis: {
 			x: {
-				label: {text:'Runners mean age',position:'outer-right'}
+				label: {text:'Runners age',position:'outer-right'}
 			}, 
 			y: {
 				label: {text: 'Median time [min]', position: 'inner-center'}
